@@ -73,12 +73,14 @@ def keyIsAValidAttribute(key: str):
 
     # check if the key is a valid attribute name
     # 1. check if the key is a valid python keyword
-    # 2. check if the key is a valid python variable name
-    # 3. check if the key contains invalid character
+    # 2. check if the key is not a Type
     if keyword.iskeyword(key):
         return False
     if not key.isidentifier():
         return False
+    if key in ('float', 'int', 'str', 'bool', 'None', 'list', 'dict', 'set', 'tuple', 'range', 'tuple', 'frozenset'):
+        return False
+
     return True
 
 

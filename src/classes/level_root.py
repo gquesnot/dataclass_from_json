@@ -48,10 +48,9 @@ class LevelRoot:
 
     def handleDirs(self):
         self.clearDir(multiplePathJoins([self.dtc_path, snakeCase(self.name)]))
-        baseDtcClassPath = multiplePathJoins([self.dtc_path, "base_dataclass.py"])
-        if not os.path.exists(baseDtcClassPath):
-            shutil.copyfile(multiplePathJoins([self.template_path, "base_dataclass.py"]),
-                            multiplePathJoins(baseDtcClassPath))
+        fromDtc = multiplePathJoins([self.template_path,  "base_dataclass.py"])
+        destDtcClassPath = multiplePathJoins([self.dtc_path, "base_dataclass.py"])
+        shutil.copyfile(fromDtc,destDtcClassPath)
 
     def addChild(self, name, datas, parent=None):
         isSubKey = not keyIsAValidAttribute(name)

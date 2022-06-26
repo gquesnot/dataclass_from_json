@@ -18,7 +18,5 @@ if __name__ == '__main__':
         controller.generate(args.names)
     if not args.generate_only:
         controller.load(args.names)
-        if args.with_data:
-            print(controller.get(args.names, withDatas=True))
-        else:
-            print(controller.get(args.names))
+        print(controller.get(args.names, withDatas=args.with_data))
+
