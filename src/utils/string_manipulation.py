@@ -66,6 +66,10 @@ def dictHasValidAttribute(d: dict):
 def getXSpace(x):
     return " " * x
 
+
+def keyIsAValidDictAttribute(key: str):
+    return key.isalnum()
+
 def keyIsAValidAttribute(key: str):
     """
     Check if a key is a valid attribute.

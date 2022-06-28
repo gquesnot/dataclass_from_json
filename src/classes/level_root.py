@@ -66,7 +66,7 @@ class LevelRoot:
                                         )
 
     def findDataclasses(self):
-        # order children by depth and path
+        # order type_ by depth and path
         sortedChildren = sorted(self.children.values(), key=lambda x: x.depth, reverse=True)
         while len(sortedChildren) > 1:
             child = sortedChildren.pop(0)
@@ -116,7 +116,7 @@ class LevelRoot:
             f.write(self.getImportsAsStr())
 
     def getImportsAsStr(self):
-        # for k, v in self.imports.items():
+        # for k, v in self.mapping.items():
         #     print(k, snakeCase(k), v)
         result = "\n".join([
             f"from {self.dtc_path}.{snakeCase(self.name)}.{snakeCase(k)} import " + ", ".join([str(v) for v in imports])

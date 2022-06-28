@@ -3,6 +3,7 @@ from copy import copy
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Any
 
+from src.dataclass.level_mapping import SchemaMapping
 from src.dataclass.level_type import LevelType, LevelMultiType
 from src.enums.type_enum import MyTypeEnum
 from src.enums.weird_type import WeirdType
@@ -26,12 +27,13 @@ class Level:
     realType: Optional[MyTypeEnum] = None
     weirdType: Optional[WeirdType] = None
     canBeNotPresent: bool = False
+    isVariant: bool = False
 
     def __post_init__(self):
         self.params = self.getParamsBlueprint()
         self.dtcBluePrint = self.getDtcBlueprint()
         if len(self.datas) > 0:
-            self.realType = MyTypeEnum.from_value(self.datas[0])
+            self.realType = MyTypeEnum.type_from_value(self.datas[0])
         for data in self.datas:
             self.addChildFromDatas(data)
 
@@ -73,7 +75,7 @@ class Level:
                 if children[0].realType == MyTypeEnum.CLASS:
                     self.realType = MyTypeEnum.CLASS
                     self.type_.addNewType(
-                        LevelType(primary=MyTypeEnum.LIST.value, secondary=[children[0].type_.types[0].primary])
+                        LevelType(primary=MyTypeEnum.LIST.value, secondary=[children[0].type_.type_[0].primary])
                     )
                 else:
                     self.realType = MyTypeEnum.LIST
@@ -84,12 +86,12 @@ class Level:
                     self.realType = MyTypeEnum.DICT
                     self.type_.addType(dict())
                     self.type_.addChildren(children)
-                # elif self.name[-1] == "s" and hasSameType and children[0].realType != MyTypeEnum.CLASS:
-                #     # TODO: IS type Dict[Enum, Any]
+                # elif self.name[-1] == "s" and hasSameType and type_[0].realType != MyTypeEnum.CLASS:
+                #     # TODO: IS type_ Dict[Enum, Any]
                 #     print('pass', self.path)
                 #     self.realType = MyTypeEnum.DICT
                 #     self.type_.addType(dict())
-                #     self.type_.addChildren(children)
+                #     self.type_.addChildren(type_)
                 else:
                     # if self.name[-1] == "s":
                     #     self.name = self.name[:-1]
@@ -103,27 +105,41 @@ class Level:
             else:
                 self.realType = MyTypeEnum.CLASS
                 self.type_.addRootClass(className)
-        if self.childHasDifferentLength(length, children):
-            same = []
-            different = []
+        if self.childHasDifferentLength(length, children) and self.realType != self.type_.types[
+            0].primary != MyTypeEnum.LIST.value:
+            sameKeys = [child.name for child in children if len(child.datas) == length]
             for child in children:
-                if length == len(child.datas):
-                    same.append(child)
-                else:
-                    different.append(child)
-            print(self)
-            print('same:\n', "\n".join([f"{' ' * 4}- {s.name}" for s in same]))
-            print('different:\n', "\n".join([f"{' ' * 4}- {s.name}" for s in different]))
-        # for child in children:
-        #     if len(child.datas) != length and self.type_.types[0].primary != MyTypeEnum.LIST.value:
-        #         child.canBeNotPresent = True
-        #         print(f"WARNING: {self} has different length than child {child.name}")
+                if child.name not in sameKeys:
+                    child.type_.type_[0].nullable = True
+
+            # print(self)
+            # print('same:\n', "\n".join([f"{' ' * 4}- {s.name}" for s in same]))
+            # print('different:\n', "\n".join([f"{' ' * 4}- {s.name}" for s in different]))
+        # for type_ in type_:
+        #     if len(type_.datas) != length and self.type_.type_[0].primary != MyTypeEnum.LIST.value:
+        #         type_.canBeNotPresent = True
+        #         print(f"WARNING: {self} has different length than type_ {type_.name}")
 
     def childHasDifferentLength(self, length: int, children):
         for child in children:
             if len(child.datas) != length:
                 return True
         return False
+
+    def findVariants(self, length, children):
+        signatures = dict()
+        print(self)
+        sameKeys = [child.name for child in children if len(child.datas) == length]
+        print(sameKeys)
+        for data in self.datas:
+            signature = "_".join(list(data.keys() - sameKeys))
+            if signature not in signatures:
+                signatures[signature] = {"exemples": [data], "count": 1}
+            else:
+                signatures[signature]["exemples"].append(data['type_'])
+                signatures[signature]["count"] += 1
+        for signature, info in signatures.items():
+            print("default class:", signature, info)
 
     @staticmethod
     def childrenHasSameType(children):
@@ -147,7 +163,7 @@ class Level:
 
     def addNewParams(self, type_, key, value, isList: bool = False):
         if type_ in self.params:
-            if type_ == "imports":
+            if type_ == "mapping":
                 self.root.addImport(key, value)
             param = self.params[type_]
             if key not in param:
@@ -163,40 +179,41 @@ class Level:
             self.printChildAndAncestor(children)
         isListRoot = self.depth == 0 and self.realType == MyTypeEnum.LIST
         for child in children:
+
             type_ = child.type_
             if isListRoot:
-                self.addNewParams('attributes', self.name, {'type': self.type_, "default": self.type_})
+                self.addNewParams('attributes', self.name, {'type_': self.type_, "default": self.type_})
             else:
-                self.addNewParams('attributes', child.name, {"type": type_, "default": child.type_})
+                self.addNewParams('attributes', child.name, {"type_": type_, "default": child.type_})
             isValidChild = child.realType == MyTypeEnum.CLASS \
                            and self.type_.types[0].primary not in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value)
             if isValidChild or isListRoot:
-                if type_.types[0].primary in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value):
-                    if type_.types[0].primary == MyTypeEnum.LIST.value:
-                        newImport = str(child.type_.types[0].secondary[0])
-                        self.addNewParams('imports', newImport, newImport, isList=True)
-                    else:
-                        newImport = str(child.type_.types[0].secondary[0])
-                        self.addNewParams('imports', newImport, newImport, isList=True)
 
+                if type_.type_[0].primary in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value):
+                    if type_.type_[0].primary == MyTypeEnum.LIST.value:
+                        newImport = str(child.type_.type_[0].secondary[0])
+                        self.addNewParams('mapping', newImport, newImport, isList=True)
+                    else:
+                        newImport = str(child.type_.type_[0].secondary[0])
+                        self.addNewParams('mapping', newImport, newImport, isList=True)
                 else:
-                    importType = str(child.type_)
-                    self.addNewParams('imports', child.name, importType, isList=True)
-                if type_.types[0].primary in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value) and not isListRoot:
-                    self.addNewParams('mapping', child.name,
-                                      {"className": toClassStyle(child.type_.types[0].secondary[0]),
-                                       "type": type_.types[0].primary, "isListRoot": isListRoot})
+                    importType = str(child.type_.type_[0].primary)
+                    self.addNewParams('mapping', child.name, importType, isList=True)
+                if type_.type_[0].primary in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value) and not isListRoot:
+                    self.addMapping(key=child.name, className=toClassStyle(child.type_.type_[0].secondary[0]),
+                                    type_=type_.type_[0].primary, isListRoot=isListRoot,
+                                    nullable=child.type_.type_[0].nullable, isWeirdDictList=child.weirdType == WeirdType.FAKE_DICT_LIST)
                 elif not isListRoot:
-                    self.addNewParams('mapping', child.name,
-                                      {"className": toClassStyle(child.name), "type": str(type_),
-                                       "isListRoot": isListRoot})
+                    self.addMapping(key=child.name, className=toClassStyle(child.name),
+                                    type_=str(type_), isListRoot=isListRoot,
+                                    nullable=child.type_.type_[0].nullable, isWeirdDictList=child.weirdType == WeirdType.FAKE_DICT_LIST)
                 else:
-                    self.addNewParams('mapping', self.name,
-                                      {"className": toClassStyle(child.name), "type": MyTypeEnum.LIST.value,
-                                       "isListRoot": isListRoot})
+                    self.addMapping(key=self.name, className=toClassStyle(child.name),
+                                    type_=MyTypeEnum.LIST.value, isListRoot=isListRoot,
+                                    nullable=child.type_.type_[0].nullable, isWeirdDictList=child.weirdType == WeirdType.FAKE_DICT_LIST)
 
             if child.isSubKey:
-                self.addNewParams('matching', child.name, child.name[1:])
+                self.addMatching(key=child.name, from_=child.name[1:])
 
         if self.realType == MyTypeEnum.CLASS \
                 and self.type_.types[0].primary not in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value) \
@@ -212,13 +229,13 @@ class Level:
 
             if self.parent:
                 print(
-                    f"{' ' * 4}- child: {child}\n"
+                    f"{' ' * 4}- type_: {child}\n"
                     f"{' ' * 4}- parent: {self}\n"
                     f"{' ' * 4}- parent.parent:  {self.parent}\n"
                 )
             else:
                 print(
-                    f"{' ' * 4}- child: {child}\n"
+                    f"{' ' * 4}- type_: {child}\n"
                     f"{' ' * 4}- parent: {self}\n"
                 )
 
@@ -229,68 +246,58 @@ class Level:
         ])
         self.dtcBluePrint["attributes"] = attributes
 
-        if len(params['imports']) > 0:
-            self.dtcBluePrint["imports"] = "\n".join([
+        if len(params['mapping']) > 0:
+            self.dtcBluePrint["mapping"] = "\n".join([
                 f"from {self.root.dtc_path}.{snakeCase(self.root.name)}.{snakeCase(k)} import " + ", ".join(
                     [str(v) for v in imports])
-                for k, imports in params["imports"].items()
+                for k, imports in params["mapping"].items()
             ]) + "\n"
-
-        if len(params["matching"]) > 0:
-            matching = "\n".join([
-                f"{' ' * 8}data['{k}'] = data['{v}']\n"
-                f"{' ' * 8}del data['{v}']"
-                for k, v in params["matching"].items()
-            ])
-            reverseMatching = "\n".join([
-                f"{' ' * 8}data['{v}'] = data['{k}']\n"
-                f"{' ' * 8}del data['{k}']"
-                for k, v in params["matching"].items()
-            ])
-            self.dtcBluePrint["from_dict_matching"] = "\n" + matching
-            self.dtcBluePrint["to_dict_matching"] = "\n" + reverseMatching
-
         if len(params["mapping"]) > 0:
-            mapping = "\n".join([
-                self.getMappingAsStr(k, v) for k, v in params["mapping"].items()
-            ])
-            self.dtcBluePrint["from_dict_mapping"] = "\n" + mapping
+            for k, v in params['mapping'].items():
+                if isinstance(v, dict):
+                    print(self, k, v)
+            fromMapping = [value for value in [v.from_dict_str() for k, v in params["mapping"].items()] if value != ""]
+            toMapping = [value for value in [v.to_dict_str() for k, v in params["mapping"].items()] if value != ""]
+            if len(fromMapping) > 0:
+                self.dtcBluePrint["from_dict_mapping"] = "\n" + "\n".join(fromMapping)
+            if len(toMapping) > 0:
+                self.dtcBluePrint["to_dict_mapping"] = "\n" + "\n".join(toMapping)
 
         return copy(self.root.template).format(**self.dtcBluePrint)
 
     @staticmethod
     def getMappingAsStr(key, mapping):
-
         if mapping["isListRoot"]:
             return f"{' ' * 8}data = " + "{" \
                                          f"'{key}': [{mapping['className']}.from_dict(v).to_dict() for v in data]" \
                                          "}"
-
         base = f"{' ' * 8}data['{key}'] = "
-        if mapping['type'] == MyTypeEnum.LIST.value:
+        if mapping['type_'] == MyTypeEnum.LIST.value:
             base += f"[{mapping['className']}.from_dict(v).to_dict() for v in data['{key}']]"
-        elif mapping['type'] == MyTypeEnum.DICT.value:
+        elif mapping['type_'] == MyTypeEnum.DICT.value:
             base += "{" + f"k: {mapping['className']}.from_dict(v).to_dict() for k, v in data['{key}'].items()" + "}"
         else:
             base += f"{mapping['className']}.from_dict(data['{key}']).to_dict()"
+        if mapping['nullable']:
+            base += f"{' ' * 8}if {key} in data:\n" \
+                    f"{' ' * 4}"
         return base
 
     def getDtcBlueprint(self):
         return {
             "json_path": self.root.dtc_path,
-            "imports": "",
+            "mapping": "",
             "className": toClassStyle(self.name),
             "attributes": "",
-            "to_dict_matching": "",
             "to_dict_mapping": "",
             "from_dict_mapping": "",
-            "from_dict_matching": "",
+            "variant": "",
         }
 
     @staticmethod
     def getParamsBlueprint():
         return {
-            "imports": dict(),
+            "mapping": dict(),
             "attributes": dict(),
             "matching": dict(),
             "mapping": dict(),
@@ -300,16 +307,32 @@ class Level:
         return f"{self.path} : {self.realType if self.realType is not None else ''} {self.type_} => " \
                f"depth: {self.depth}, isSubKey: {self.isSubKey} "
 
+    def addMapping(self, key, className, type_, nullable=False, isListRoot=False, isWeirdDictList=False):
+        if key in self.params['mapping']:
+            self.params['mapping'][key].className = className
+            self.params['mapping'][key].type_ = type_
+            self.params['mapping'][key].nullable = nullable
+            self.params['mapping'][key].isListRoot = isListRoot
+            self.params['mapping'][key].isWeirdDictList = isWeirdDictList
+        else:
+            self.params['mapping'][key] = SchemaMapping(key=key, className=className, type_=type_, nullable=nullable, isWeirdDictList=isWeirdDictList, isListRoot=isListRoot)
+
+    def addMatching(self, key, from_):
+        if key in self.params['mapping']:
+            self.params['mapping'][key].from_ = from_
+        else:
+            self.params['mapping'][key] = SchemaMapping(key=key, from_=from_)
+
     def getAttributeAsStr(self, k, attribute):
-        type_ = attribute["default"].types[0]
+        type_ = attribute["default"].type_[0]
         if type_.primary in (MyTypeEnum.LIST.value, MyTypeEnum.DICT.value) and not type_.nullable:
-            default = f" = field(default_factory={attribute['default'].types[0].primary.lower()})"
+            default = f" = Field(default_factory={attribute['default'].type_[0].primary.lower()})"
         elif type_.primary is not None and type_.primary not in [v.value for v in
                                                                  MyTypeEnum.__members__.values()] and not type_.nullable:
-            default = f" = field(default_factory={attribute['default']})"
+            default = f" = Field(default_factory={attribute['default']})"
         else:
-            default = f" = field(default={self.getDefaultField(type_)})"
-        return f"{' ' * 4}{k}: {attribute['type']}{default}"
+            default = f" = Field(default={self.getDefaultField(type_)})"
+        return f"{' ' * 4}{k}: {attribute['type_']}{default}"
 
     @staticmethod
     def getDefaultField(type_: LevelType) -> str:
@@ -326,7 +349,7 @@ class Level:
             case MyTypeEnum.BOOL.value:
                 return "False"
             case _:
-                raise Exception(f"wrong type or multi for getDefaultField: {typeStr}")
+                raise Exception(f"wrong type_ or multi for getDefaultField: {typeStr}")
 
     def childrenAreFakeDictList(self, children):
         for child in children:

@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional, List
 
-from src.enums.type_enum import MyTypeEnum
+from src.enums.type_enum import MyTypeBase
 from src.utils.string_manipulation import toClassStyle
 
 
@@ -66,7 +66,7 @@ class LevelMultiType:
         elif data is None:
             newType.nullable = True
         else:
-            newType.addSecondary([MyTypeEnum.from_value(data)])
+            newType.addSecondary([MyTypeEnum.type_from_value(data)])
         self.addNewType(newType)
 
     @staticmethod
@@ -79,19 +79,19 @@ class LevelMultiType:
         for child in children:
 
             if child.type_ is not None:
-                if len(child.type_.types) > 1:
-                    print('WARNING: Multiple types for child ', child)
-                    # base = child.type_.types[0]
-                    # for type_ in child.type_.types[1:]:
+                if len(child.type_.type_) > 1:
+                    print('WARNING: Multiple type_ for type_ ', child)
+                    # base = type_.type_.type_[0]
+                    # for type_ in type_.type_.type_[1:]:
                     #     if base.canAdd(type_):
                     #         base = base + type_
                     # if mainType.canAdd(base):
                     #     mainType = mainType + base
                 else:
 
-                    # if mainType.canAdd(child.type_.types[0]):
-                    #     mainType = mainType + child.type_.types[0]
-                    mainType.addSecondary(child.type_.types[0].secondary)
+                    # if mainType.canAdd(type_.type_.type_[0]):
+                    #     mainType = mainType + type_.type_.type_[0]
+                    mainType.addSecondary(child.type_.type_[0].secondary)
 
     def addNewType(self, type_: LevelType):
         found = False
@@ -114,8 +114,8 @@ class LevelMultiType:
 
     def addRootList(self, children):
         if len(children) != 1:
-            raise Exception("Root list must have only one child")
-        newType = LevelType(primary=MyTypeEnum.LIST.value, secondary=[children[0].type_.types[0].primary])
+            raise Exception("Root list must have only one type_")
+        newType = LevelType(primary=MyTypeEnum.LIST.value, secondary=[children[0].type_.type_[0].primary])
         self.addNewType(newType)
 
     def __str__(self):
