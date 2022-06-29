@@ -12,16 +12,16 @@ class Stats(BaseModel):
     initialMana: float = 0.0
     magicResist: Optional[float] = None
     mana: float = 0.0
-    range_: float = 0.0
+    _range: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
         data = self.dict()
-        data['range'] = data['range_']
+        data['range'] = data['_range']
         return data
 
     @classmethod
     def from_dict(cls, data: Any) -> "Stats":
-        data['range_'] = data['range']
+        data['_range'] = data['range']
         del data['range']
 
         return Stats(**data)

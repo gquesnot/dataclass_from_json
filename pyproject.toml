@@ -17,6 +17,7 @@ pdoc3 = "^0.10.0"
 Sphinx = "^5.0.2"
 sphinx-rtd-theme = "^1.0.0"
 pyment = "^0.3.3"
+pytest = "^7.1.2"
 
 [tool.poetry.dev-dependencies]
 

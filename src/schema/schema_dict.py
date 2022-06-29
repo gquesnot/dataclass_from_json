@@ -69,7 +69,7 @@ class SchemaDict(SchemaBase):
         else:
             super().addData(data, type_, secondaryClass)
             for k, v in data.items():
-                newKey = k if keyIsAValidAttribute(k) else f"{k}_"
+                newKey = k if keyIsAValidAttribute(k) else f"_{k}"
                 if newKey != k and self.type__.primary != MyTypeWithMapping.LIST_ROOT:
                     self.addMatching(k, newKey)
                 self.properties[k] = self.root.addSchemaOrData(newKey, v, self)

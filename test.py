@@ -1,11 +1,11 @@
 import json
 
-from dataclass.champions.champions import Champions
+from dataclass.match.match import Match
 
 if __name__ == '__main__':
-    with open('jsons/champions.json') as f:
+    with open('jsons/match.json') as f:
         data = json.load(f)
-    champions = Champions.from_dict(data)
+    match = Match(**data)
+    print(match)
 
-    for champion in champions.champions:
-        print(champion.ability.name + champion.ability.desc+ champion.ability)
+
