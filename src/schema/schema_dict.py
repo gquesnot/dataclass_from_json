@@ -2,7 +2,7 @@ from copy import copy
 from typing import Dict, Set, List, Optional
 
 from src.dataclass.level_mapping import SchemaMappingMatching, SchemaMapping, SchemaMatching
-from src.enums.type_enum import MyTypeWithMapping, get_default_value, MyTypeDefault
+from src.enums.type_enum import ComplexType, get_default_value, SimpleType
 from src.schema.schema_base import SchemaBase
 from src.schema.schema_list import SchemaList
 from src.schema.schema_type import SchemaType
@@ -22,11 +22,11 @@ class SchemaDict(SchemaBase):
             else:
                 v.getSecondaryAttributes()
 
-        if self.type__.primary == MyTypeWithMapping.CLASS:
-            self.type__.addSecondary(toClassStyle(self.name))
-        elif self.type__.primary == MyTypeWithMapping.DICT:
+        if self.type_.primary == ComplexType.CLASS:
+            self.type_.addSecondary(toClassStyle(self.name))
+        elif self.type_.primary == ComplexType.DICT:
             for k, v in self.properties.items():
-                self.type__.addSecondary(v.type__)
+                self.type_.addSecondary(v.type_)
 
     def getBluePrint(self) -> Dict[str, str]:
         return {
@@ -45,14 +45,14 @@ class SchemaDict(SchemaBase):
     mappings: Dict[str, SchemaMappingMatching]
     properties: Dict[str, "SchemaBase"]
 
-    def __init__(self, name: str, data, type_: MyTypeWithMapping, root: "SchemaRoot",
+    def __init__(self, name: str, data, type_: ComplexType, root: "SchemaRoot",
                  parent: Optional["SchemaBase"] = None):
         super().__init__(name, root, parent)
         self.mappings = dict()
         self.properties = dict()
         self.required = set()
         self.imports = dict()
-        if self.parent is None and type_ == MyTypeWithMapping.LIST_ROOT:
+        if self.parent is None and type_ == ComplexType.LIST_ROOT:
             data = {name: data}
             subKey = getSubKey(name)
             self.mappings[subKey] = SchemaMappingMatching(key=name,
@@ -66,14 +66,14 @@ class SchemaDict(SchemaBase):
             self.imports[k] = []
         self.imports[k].append(v)
 
-    def addData(self, data, type_: MyTypeWithMapping, secondaryClass: str = ""):
+    def addData(self, data, type_: ComplexType, secondaryClass: str = ""):
         if data is None:
             self.setNullable()
         else:
             super().addData(data, type_, secondaryClass)
             for k, v in data.items():
                 newKey = k if keyIsAValidAttribute(k) else f"_{k}"
-                if newKey != k and self.type__.primary != MyTypeWithMapping.LIST_ROOT:
+                if newKey != k and self.type_.primary != ComplexType.LIST_ROOT:
                     self.addMatching(k, newKey)
                 self.properties[k] = self.root.addSchemaOrData(newKey, v, self)
 
@@ -95,48 +95,48 @@ class SchemaDict(SchemaBase):
     def getAttributeAsStr(self, k, attribute: "SchemaBase"):
         before = ' ' * 4
 
-        if isinstance(attribute.type__.primary, MyTypeWithMapping):
+        if isinstance(attribute.type_.primary, ComplexType):
 
-            if attribute.type__.hasClass():
-                if attribute.type__.primary == MyTypeWithMapping.CLASS or attribute.type__.primary == MyTypeWithMapping.LIST_ROOT:
-                    className = attribute.type__.secondary[0]
-                elif isinstance(attribute.type__.secondary[0], str):
-                    className = attribute.type__.secondary[0]
+            if attribute.type_.hasClass():
+                if attribute.type_.primary == ComplexType.CLASS or attribute.type_.primary == ComplexType.LIST_ROOT:
+                    className = attribute.type_.secondary[0]
+                elif isinstance(attribute.type_.secondary[0], str):
+                    className = attribute.type_.secondary[0]
                 else:
-                    className = attribute.type__.secondary[0].secondary[0]
+                    className = attribute.type_.secondary[0].secondary[0]
 
-                if attribute.type__.primary == MyTypeWithMapping.CLASS:
-                    return f"{before}{attribute.name}: {self.addNullableToAttributeStr(className, attribute.type__.nullable)}" \
+                if attribute.type_.primary == ComplexType.CLASS:
+                    return f"{before}{attribute.name}: {self.addNullableToAttributeStr(className, attribute.type_.nullable)}" \
                            f" = Field(default_factory={className})"
-                elif attribute.type__.primary == MyTypeWithMapping.LIST_ROOT:
-                    return f"{before}{attribute.name}: List[{self.addNullableToAttributeStr(className, attribute.type__.nullable)}]" \
+                elif attribute.type_.primary == ComplexType.LIST_ROOT:
+                    return f"{before}{attribute.name}: List[{self.addNullableToAttributeStr(className, attribute.type_.nullable)}]" \
                            f" = Field(default_factory=list)"
-                elif isinstance(attribute.type__.secondary[0], str):
+                elif isinstance(attribute.type_.secondary[0], str):
                     return self.getDictListAttributeStr(className, attribute, before)
                 else:
                     print("ERROR", self, attribute)
             else:
-                className = attribute.type__.getSecondary()
+                className = attribute.type_.getSecondary()
                 return self.getDictListAttributeStr(className, attribute, before)
         else:
-            attr =self.addNullableToAttributeStr(attribute.type__.secondary[0].value, attribute.type__.nullable)
-            default = get_default_value(attribute.type__.secondary[0], attribute.type__.nullable)
+            attr =self.addNullableToAttributeStr(attribute.type_.secondary[0].value, attribute.type_.nullable)
+            default = get_default_value(attribute.type_.secondary[0], attribute.type_.nullable)
             return f"{before}{attribute.name}: {attr}" \
                    f" = {default}"
 
     def getDictListAttributeStr(self, className, attribute,before):
-        if attribute.type__.primary == MyTypeWithMapping.LIST:
-            return f"{before}{attribute.name}: {self.addNullableToAttributeStr('List[' + self.addNullableToAttributeStr(className, attribute.type__.secondaryNullable()) + ']', attribute.type__.nullable)}" \
+        if attribute.type_.primary == ComplexType.LIST:
+            return f"{before}{attribute.name}: {self.addNullableToAttributeStr('List[' + self.addNullableToAttributeStr(className, attribute.type_.secondaryNullable()) + ']', attribute.type_.nullable)}" \
                            f" = Field(default_factory=list)"
         else:
-            attr = self.addNullableToAttributeStr(className, attribute.type__.secondaryNullable())
-            attrParent = self.addNullableToAttributeStr('Dict[str, ' + attr + ']', attribute.type__.nullable)
+            attr = self.addNullableToAttributeStr(className, attribute.type_.secondaryNullable())
+            attrParent = self.addNullableToAttributeStr('Dict[str, ' + attr + ']', attribute.type_.nullable)
             return f"{before}{attribute.name}: {attrParent}" \
             f" = Field(default_factory=dict)"
 
     def scanForMappings(self):
         for k, v in self.properties.items():
-            if self.parent is None and self.type__.primary == MyTypeWithMapping.LIST_ROOT:
+            if self.parent is None and self.type_.primary == ComplexType.LIST_ROOT:
                 v.scanForMappings()
             else:
                 if isinstance(v, SchemaDict):
@@ -161,9 +161,9 @@ class SchemaDict(SchemaBase):
 
     def addMapping(self, k, v):
         type_ = v.getType()
-        if type_.primary == MyTypeWithMapping.CLASS or isinstance(type_.primary, MyTypeWithMapping):
+        if type_.primary == ComplexType.CLASS or isinstance(type_.primary, ComplexType):
             if type_.hasClass():
-                if type_.primary == MyTypeWithMapping.CLASS:
+                if type_.primary == ComplexType.CLASS:
                     className = type_.secondary[0]
                     self.addImport(camelCase(className), className)
                 else:
@@ -187,16 +187,16 @@ class SchemaDict(SchemaBase):
                                                                   nullable=type_.nullable)
 
     def getType(self):
-        return self.type__
-        # if self.type_ == MyTypeWithMapping.CLASS:
-        #     result = [MyTypeWithMapping.CLASS, [toClassStyle(self.name)]]
+        return self.type_
+        # if self.type_ == ComplexType.CLASS:
+        #     result = [ComplexType.CLASS, [toClassStyle(self.name)]]
         # else:
         #     tmp = set()
         #     for k, v in self.properties.items():
         #         tmp.add(v.getType())
         #     result = [self.type_, [list(tmp)]]
         # if self.nullable:
-        #     result[1].append(MyTypeDefault.NONE)
+        #     result[1].append(SimpleType.NONE)
         # return result
 
     def dtcToString(self):
@@ -231,11 +231,11 @@ class SchemaDict(SchemaBase):
 
     def generate(self):
 
-        if self.type__.hasClass():
+        if self.type_.hasClass():
             dataclassStr = self.dtcToString()
             with open(multiplePathJoins([self.root.dtc_path, snakeCase(self.root.name), f"{snakeCase(self.name)}.py"]),
                       'w') as f:
                 f.write(dataclassStr)
             for k, v in self.properties.items():
-                if isinstance(v.type__.primary, MyTypeWithMapping):
+                if isinstance(v.type_.primary, ComplexType):
                     v.generate()

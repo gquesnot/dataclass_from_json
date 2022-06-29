@@ -20,8 +20,8 @@ from src.schema.schema_root import SchemaRoot
 
 if __name__ == '__main__':
 
-    sb = SchemaRoot("comps")
-    sb.generate()
+    sb = SchemaRoot()
+    sb.generate("comps")
     print(sb)
 
     # lvlController = LevelController()

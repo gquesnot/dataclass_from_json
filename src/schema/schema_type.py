@@ -1,86 +1,77 @@
-import dataclasses
-from dataclasses import field
+from abc import ABC, abstractmethod
+from dataclasses import field, dataclass
 from typing import Optional, List, Union
 
-from src.enums.type_enum import MyTypeBase, MyTypeDefault, MyTypeWithMapping
+from src.enums.type_enum import SimpleType, ComplexType
 
 
-@dataclasses.dataclass
+@dataclass
 class SchemaType:
-    primary: Optional[MyTypeBase] = None
-    secondary: List[Union[MyTypeBase, "SchemaType"]] = field(default_factory=set)
+    type: Optional[ComplexType] = None
+    name: Optional[str] = None
+    children: List["SchemaType"] = field(default_factory=list)
     nullable: bool = False
 
-    def __post_init__(self):
-        self.primary = None
-        self.secondary = list()
-        self.nullable = False
+    def hasType(self):
+        return self.type is not None
 
-    def __eq__(self, other):
-        if isinstance(other, SchemaType):
-            return self.primary == other.primary and self.secondary == other.secondary and self.nullable == other.nullable
-        return False
 
-    def getSecondary(self):
-        results = []
-        for secondary in self.secondary:
-            if isinstance(secondary, str):
-                element = secondary
-            elif isinstance(secondary, MyTypeDefault):
-                element = secondary.value
-            elif isinstance(secondary, SchemaType):
-                if len(secondary.secondary) == 0:
-                    print('*** get secondary', self)
-                element = secondary.secondary[0]
-                if isinstance(element, MyTypeDefault):
-                    element = element.value
-                if secondary.nullable:
-                    element = f"Optional[{element}]"
+    def isComplex(self) -> bool:
+        return self.type != ComplexType.DEFAULT
+
+    def isSimple(self) -> bool:
+        return self.type == ComplexType.DEFAULT
+
+    def hasNullableChildren(self) -> bool:
+        return any([child.nullable for child in self.children])
+
+    def isClass(self) -> bool:
+        return self.type == ComplexType.CLASS
+
+    def isList(self) -> bool:
+        return self.type == ComplexType.LIST
+
+    def isDict(self) -> bool:
+        return self.type == ComplexType.DICT
+
+    def isListRoot(self) -> bool:
+        return self.type == ComplexType.LIST_ROOT
+
+    def isNullable(self) -> bool:
+        return self.nullable
+
+    def addChild(self, child):
+        if self.isComplex():
+            if child in self.children:
+                childFound = self.children[self.children.index(child)]
+                if not childFound.nullable and child.nullable:
+                    childFound.nullable = True
             else:
-                element = secondary
-            results.append(element)
-        if len(results) == 1:
-            return results[0]
+                self.children.append(child)
         else:
-            return f"Union[{', '.join(results)}]"
+            raise Exception("Cannot add child to simple type")
 
+    def __eq__(self, other) -> bool:
+        return self.type == other.type and self.name == other.name and self.children == other.children
 
-
-    def hasClass(self):
-        if self.primary is None:
-            return False
-        if self.primary == MyTypeWithMapping.CLASS or self.primary == MyTypeWithMapping.LIST_ROOT:
-            return True
-        elif len(self.secondary) > 0:
-            for v in self.secondary:
-                if isinstance(v, MyTypeDefault):
-                    return False
-                elif isinstance(v, str):
-                    return True
-                elif v.primary == MyTypeWithMapping.CLASS:
-                    return True
-        return False
-
-    def secondaryNullable(self):
-        for k in self.secondary:
-            if isinstance(k, SchemaType):
-                return k.nullable
-        return False
-
-    def canAdd(self, child):
-        return child.primary is None or child.primary == MyTypeWithMapping.CLASS
-
-    def addSecondary(self, type_:Union[MyTypeDefault, MyTypeWithMapping, str, "SchemaType"]):
-        if type_ is None:
-            self.nullable = True
+    def getType(self, withNullable=True) -> str:
+        if self.isComplex():
+            if self.isList():
+                return self.addNullableAround(f"List[{self.getTypesOfChildren()}]", withNullable)
+            elif self.isDict():
+                return self.addNullableAround(f"Dict[{self.getTypesOfChildren()}]", withNullable)
+            elif self.isClass():
+                return self.addNullableAround(f"{self.name}", withNullable)
+            elif self.isListRoot():
+                return self.addNullableAround(f"List[{self.getTypesOfChildren()}]", withNullable)
+        elif self.isSimple():
+            return self.addNullableAround(f"{self.type.value}", withNullable)
         else:
-            if type_ not in self.secondary:
-                if isinstance(type_, MyTypeDefault) or isinstance(type_, MyTypeWithMapping):
-                    self.secondary.append(type_)
-                elif isinstance(type_, str):
-                    self.secondary = [type_]
-                elif type_ not in self.secondary and self.canAdd(type_):
-                    if type_.nullable:
-                        self.secondary.append(type_)
-                    else:
-                        self.secondary.extend(type_.secondary)
+            raise Exception("Unknown type_: " + str(type(self)))
+
+    def addNullableAround(self, type_, withNullable=True) -> str:
+        return f"Optional[{type_}]" if self.nullable and withNullable else type_
+
+    def getTypesOfChildren(self) -> str:
+        return self.addNullableAround(", ".join([child.getType(withNullable=False) for child in self.children]),
+                                      self.hasNullableChildren())

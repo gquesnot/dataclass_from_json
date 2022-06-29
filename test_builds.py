@@ -1,56 +1,27 @@
 import json
 from abc import ABC, abstractmethod
 
-from dataclass.champions.champions import Champions
-from dataclass.match.match import Match
 from src.schema.schema_root import SchemaRoot
 
 
-class BaseBuild(ABC):
-    @abstractmethod
-    def test_build(self):
-        pass
+class TestBuild():
+    def __init__(self):
+        self.sb = SchemaRoot(json_path="test_jsons", dtc_path="test_dataclass")
 
+    def test_dict_simple(self):
+        self.sb.generate("dict_simple")
 
-class TestMatch(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("match")
-        sb.generate()
+    def test_dict_nested(self):
+        self.sb.generate("dict_nested")
 
+    def test_dict_real(self):
+        self.sb.generate("dict_real")
 
-class TestChampions(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("champions")
-        sb.generate()
+    def test_list_root_simple(self):
+        self.sb.generate("list_root_simple")
 
+    def test_list_root_simple_obj(self):
+        self.sb.generate("list_root_simple_obj")
 
-class TestItems(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("items")
-        sb.generate()
-
-
-class TestMatchTimeline(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("matchTimeline")
-        sb.generate()
-
-
-class TestTraits(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("traits")
-        sb.generate()
-
-
-class TestLiveGame(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("live_game")
-        sb.generate()
-
-
-class TestComps(BaseBuild):
-    def test_build(self):
-        sb = SchemaRoot("comps")
-        sb.generate()
-
-
+    def test_list_obj(self):
+        self.sb.generate("list_obj")

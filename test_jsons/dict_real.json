@@ -1,0 +1,28 @@
+{
+  "name": "str",
+  "real_": {
+    "{second}": "string",
+    "{int_}": 1,
+    "{float_}": 1.0,
+    "{bool_}": true,
+    "{null_}": null,
+    "{array_}": [
+      1,
+      2,
+      3
+    ],
+    "object_": {
+      "a": 1,
+      "b": 2
+    }
+  },
+  "int_": 1,
+  "float_": 1.0,
+  "bool_": true,
+  "null_": null,
+  "array": [
+    1,
+    2,
+    3
+  ]
+}

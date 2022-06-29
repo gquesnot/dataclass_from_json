@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from src.enums.type_enum import MyTypeBase, MyTypeWithMapping
+from src.enums.type_enum import MyTypeBase, ComplexType
 
 
 @dataclass
@@ -34,7 +34,7 @@ class SchemaMappingMatching:
 
     def from_dict_str(self) -> str:
         result = ""
-        if self.hasMapping() and self.mapping.type_ == MyTypeWithMapping.LIST_ROOT:
+        if self.hasMapping() and self.mapping.type_ == ComplexType.LIST_ROOT:
             return ' ' * 8 + "data = {" \
                              f"'{self.key}': [{self.getFromDictToDict('v')} for v in data]" \
                              "}"
@@ -47,11 +47,11 @@ class SchemaMappingMatching:
             if not self.hasMapping():
                 result += "\n"
         if self.hasMapping():
-            if self.mapping.type_ == MyTypeWithMapping.DICT_LIST:
+            if self.mapping.type_ == ComplexType.DICT_LIST:
                 result += f"{base}[{self.getFromDictToDict('v')} for v in data['{self.key}'].values()]\n"
-            elif self.mapping.type_ == MyTypeWithMapping.LIST:
+            elif self.mapping.type_ == ComplexType.LIST:
                 result += f"{base}[{self.getFromDictToDict('v')} for v in data['{self.key}']]"
-            elif self.mapping.type_ == MyTypeWithMapping.DICT:
+            elif self.mapping.type_ == ComplexType.DICT:
                 result += f"{base}{{k: {self.getFromDictToDict('v')} for k, v in data['{self.key}'].items()}}"
             else:
                 dataName = f"data['{self.key}']"

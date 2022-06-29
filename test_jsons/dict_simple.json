@@ -1,0 +1,8 @@
+{
+  "name": "str",
+  "_float" : 0.1,
+  "_int" : 1,
+    "_bool" : true,
+    "_null" : null,
+    "_array" : [1,2,3]
+}

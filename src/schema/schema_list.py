@@ -1,7 +1,7 @@
 from typing import Optional
 
 from src.schema.schema_base import SchemaBase
-from src.enums.type_enum import MyTypeWithMapping
+from src.enums.type_enum import ComplexType
 from src.utils.string_manipulation import getSubKey
 
 
@@ -15,25 +15,25 @@ class SchemaList(SchemaBase):
             self.child.getSecondaryAttributes()
             for elem in self.datas:
                 if elem is None:
-                    self.type__.nullable = True
+                    self.type_.nullable = True
                     break
-            self.type__.addSecondary(self.child.type__)
+            self.type_.addSecondary(self.child.type_)
 
 
     child: Optional["SchemaBase"] = None
 
-    def __init__(self, name: str, data, type_: MyTypeWithMapping, root: "SchemaRoot",
+    def __init__(self, name: str, data, type_: ComplexType, root: "SchemaRoot",
                  parent: Optional["SchemaBase"] = None):
         super().__init__(name, root, parent)
         self.child = None
         self.addData(data, type_)
 
-    def addData(self, data, type_: MyTypeWithMapping):
+    def addData(self, data, type_: ComplexType):
         if data is None:
             self.setNullable()
         else:
 
-            if MyTypeWithMapping.DICT_LIST == self.type__.primary and isinstance(data, dict):
+            if ComplexType.DICT_LIST == self.type_.primary and isinstance(data, dict):
                 data = list(data.values())
             super().addData(data, type_)
             subkey = getSubKey(self.name)
@@ -54,7 +54,7 @@ class SchemaList(SchemaBase):
         pass
 
     def getType(self):
-        return self.type__
+        return self.type_
 
     def scanForMappings(self):
         if self.child:

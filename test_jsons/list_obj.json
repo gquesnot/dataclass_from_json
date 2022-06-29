@@ -1,0 +1,15 @@
+{
+  "name": "name",
+    "versions":  [
+      {
+        "sub_version": "1.0.0"
+      },
+      {
+        "sub_version": "1.0.1",
+        "test" : "test"
+      },
+      {
+        "sub_version": null
+      }
+    ]
+}
