@@ -16,7 +16,6 @@ class Stats(BaseModel):
 
     def to_dict(self) -> Dict[str, Any]:
         data = self.dict()
-        data['range'] = data['_range']
         return data
 
     @classmethod

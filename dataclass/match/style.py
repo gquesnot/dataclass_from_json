@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from dataclass.match.selection import Selection
+from dataclass.match.selection import Selection, Selection, Selection
 
 
 class Style(BaseModel):

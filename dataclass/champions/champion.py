@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from ..\dataclass.champions.ability import Ability
-from ..\dataclass.champions.stats import Stats
+from dataclass.champions.ability import Ability
+from dataclass.champions.stats import Stats
 
 
 class Champion(BaseModel):

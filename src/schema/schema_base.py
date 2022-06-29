@@ -76,7 +76,7 @@ class SchemaBase(ABC):
         return len(self.datas)
 
     def setNullable(self):
-        print(f"{self} is Nullable")
+        #print(f"{self} is Nullable")
         self.nullable = True
         self.type__.nullable = True
 

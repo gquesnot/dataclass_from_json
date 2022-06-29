@@ -1,11 +1,11 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from dataclass.match.baron import Baron
-from dataclass.match.champion import Champion
-from dataclass.match.dragon import Dragon
-from dataclass.match.inhibitor import Inhibitor
-from dataclass.match.rift_herald import RiftHerald
-from dataclass.match.tower import Tower
+from dataclass.match.baron import Baron, Baron, Baron
+from dataclass.match.champion import Champion, Champion, Champion
+from dataclass.match.dragon import Dragon, Dragon, Dragon
+from dataclass.match.inhibitor import Inhibitor, Inhibitor, Inhibitor
+from dataclass.match.rift_herald import RiftHerald, RiftHerald, RiftHerald
+from dataclass.match.tower import Tower, Tower, Tower
 
 
 class Objectives(BaseModel):

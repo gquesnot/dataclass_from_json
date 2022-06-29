@@ -11,12 +11,13 @@ class SchemaList(SchemaBase):
     """
 
     def getSecondaryAttributes(self):
-        self.child.getSecondaryAttributes()
-        for elem in self.datas:
-            if elem is None:
-                self.type__.nullable = True
-                break
-        self.type__.addSecondary(self.child.type__)
+        if self.child is not None:
+            self.child.getSecondaryAttributes()
+            for elem in self.datas:
+                if elem is None:
+                    self.type__.nullable = True
+                    break
+            self.type__.addSecondary(self.child.type__)
 
 
     child: Optional["SchemaBase"] = None
@@ -46,7 +47,8 @@ class SchemaList(SchemaBase):
             # self.nullable = self.type_.nullable
 
     def generate(self):
-        self.child.generate()
+        if self.child:
+            self.child.generate()
 
     def scanForClass(self):
         pass
@@ -55,4 +57,5 @@ class SchemaList(SchemaBase):
         return self.type__
 
     def scanForMappings(self):
-        self.child.scanForMappings()
+        if self.child:
+            self.child.scanForMappings()

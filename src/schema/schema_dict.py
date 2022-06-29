@@ -2,7 +2,7 @@ from copy import copy
 from typing import Dict, Set, List, Optional
 
 from src.dataclass.level_mapping import SchemaMappingMatching, SchemaMapping, SchemaMatching
-from src.enums.type_enum import MyTypeWithMapping, get_default_value
+from src.enums.type_enum import MyTypeWithMapping, get_default_value, MyTypeDefault
 from src.schema.schema_base import SchemaBase
 from src.schema.schema_list import SchemaList
 from src.schema.schema_type import SchemaType
@@ -17,7 +17,10 @@ class SchemaDict(SchemaBase):
 
     def getSecondaryAttributes(self):
         for k, v in self.properties.items():
-            v.getSecondaryAttributes()
+            if v is None:
+                print("*** getSecondary", k,v)
+            else:
+                v.getSecondaryAttributes()
 
         if self.type__.primary == MyTypeWithMapping.CLASS:
             self.type__.addSecondary(toClassStyle(self.name))
@@ -91,6 +94,7 @@ class SchemaDict(SchemaBase):
 
     def getAttributeAsStr(self, k, attribute: "SchemaBase"):
         before = ' ' * 4
+
         if isinstance(attribute.type__.primary, MyTypeWithMapping):
 
             if attribute.type__.hasClass():
@@ -100,6 +104,7 @@ class SchemaDict(SchemaBase):
                     className = attribute.type__.secondary[0]
                 else:
                     className = attribute.type__.secondary[0].secondary[0]
+
                 if attribute.type__.primary == MyTypeWithMapping.CLASS:
                     return f"{before}{attribute.name}: {self.addNullableToAttributeStr(className, attribute.type__.nullable)}" \
                            f" = Field(default_factory={className})"
@@ -108,19 +113,25 @@ class SchemaDict(SchemaBase):
                            f" = Field(default_factory=list)"
                 elif isinstance(attribute.type__.secondary[0], str):
                     return self.getDictListAttributeStr(className, attribute, before)
+                else:
+                    print("ERROR", self, attribute)
             else:
-                className = attribute.type__.secondary[0].value
+                className = attribute.type__.getSecondary()
                 return self.getDictListAttributeStr(className, attribute, before)
         else:
-            return f"{before}{attribute.name}: {self.addNullableToAttributeStr(attribute.type__.secondary[0].value, attribute.type__.nullable)}" \
-                   f" = {get_default_value(attribute.type__.secondary[0], attribute.type__.nullable)}"
+            attr =self.addNullableToAttributeStr(attribute.type__.secondary[0].value, attribute.type__.nullable)
+            default = get_default_value(attribute.type__.secondary[0], attribute.type__.nullable)
+            return f"{before}{attribute.name}: {attr}" \
+                   f" = {default}"
 
     def getDictListAttributeStr(self, className, attribute,before):
         if attribute.type__.primary == MyTypeWithMapping.LIST:
             return f"{before}{attribute.name}: {self.addNullableToAttributeStr('List[' + self.addNullableToAttributeStr(className, attribute.type__.secondaryNullable()) + ']', attribute.type__.nullable)}" \
                            f" = Field(default_factory=list)"
         else:
-            f"{before}{attribute.name}: {self.addNullableToAttributeStr('Dict[str, ' + self.addNullableToAttributeStr(className, attribute.type__.secondaryNullable()) + ']', attribute.type__.nullable)}" \
+            attr = self.addNullableToAttributeStr(className, attribute.type__.secondaryNullable())
+            attrParent = self.addNullableToAttributeStr('Dict[str, ' + attr + ']', attribute.type__.nullable)
+            return f"{before}{attribute.name}: {attrParent}" \
             f" = Field(default_factory=dict)"
 
     def scanForMappings(self):
@@ -163,8 +174,8 @@ class SchemaDict(SchemaBase):
                         className = type_.secondary[0]
                     self.addImport(camelCase(className), className)
 
-                if v.name in self.mappings and self.mappings[v.name].hasMapping():
-                    print(f"{v.name} already exists in {self}")
+                #if v.name in self.mappings and self.mappings[v.name].hasMapping():
+                #    print(f"{v.name} already exists in {self}")
                 if k in self.mappings:
                     self.mappings[v.name].mapping.className = className
                     self.mappings[v.name].mapping.type_ = type_.primary
@@ -190,11 +201,18 @@ class SchemaDict(SchemaBase):
 
     def dtcToString(self):
         bluePrint = self.getBluePrint()
-        bluePrint['attributes'] = "\n".join([
-            self.getAttributeAsStr(k, attribute)
-            for k, attribute in self.properties.items()
-        ])
-
+        # bluePrint['attributes'] = "\n".join([
+        #     self.getAttributeAsStr(k, attribute)
+        #     for k, attribute in self.properties.items()
+        # ])
+        attributes = []
+        for k,v in self.properties.items():
+            attr = self.getAttributeAsStr(k,v)
+            if attr is not None:
+                attributes.append(attr)
+            else:
+                print('*** ATTRIBUTE ERROR', k,v)
+        bluePrint['attributes'] = "\n".join(attributes)
         if len(self.imports) > 0:
             bluePrint['imports'] = "\n".join([
                 f"from {self.root.dtc_path}.{snakeCase(self.root.name)}.{snakeCase(k)} import " + ", ".join(
@@ -202,15 +220,12 @@ class SchemaDict(SchemaBase):
                 for k, imports in self.imports.items()
             ]) + "\n"
         if len(self.mappings) > 0:
-            for k, v in self.mappings.items():
-                if isinstance(v, dict):
-                    print(self, k, v)
             fromMapping = [value for value in [v.from_dict_str() for k, v in self.mappings.items()] if value != ""]
             toMapping = [value for value in [v.to_dict_str() for k, v in self.mappings.items()] if value != ""]
             if len(fromMapping) > 0:
                 bluePrint["from_dict_mapping"] = "\n" + "\n".join(fromMapping)
-            if len(toMapping) > 0:
-                bluePrint["to_dict_mapping"] = "\n" + "\n".join(toMapping)
+            #if len(toMapping) > 0:
+            #    bluePrint["to_dict_mapping"] = "\n" + "\n".join(toMapping)
 
         return copy(self.root.template).format(**bluePrint)
 

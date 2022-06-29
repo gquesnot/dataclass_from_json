@@ -20,7 +20,7 @@ from src.schema.schema_root import SchemaRoot
 
 if __name__ == '__main__':
 
-    sb = SchemaRoot("match")
+    sb = SchemaRoot("comps")
     sb.generate()
     print(sb)
 

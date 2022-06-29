@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from ..\dataclass.champions.variable import Variable
+from dataclass.champions.variable import Variable
 
 
 class Ability(BaseModel):

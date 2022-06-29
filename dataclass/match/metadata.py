@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel
 class Metadata(BaseModel):
     dataVersion: str = ''
     matchId: str = ''
-    participants: List[str] = Field(default_factory=list)
+    participants: List[Union[str, str, str]] = Field(default_factory=list)
 
     def to_dict(self) -> Dict[str, Any]:
         data = self.dict()

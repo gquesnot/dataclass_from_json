@@ -1,6 +1,6 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from dataclass.match.perks import Perks
+from dataclass.live_game.perks import Perks
 
 
 class Participant(BaseModel):

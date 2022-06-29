@@ -1,7 +1,7 @@
 from typing import Dict, Any, List, Union, Optional
 from pydantic import Field, BaseModel
-from dataclass.match.ban import Ban
-from dataclass.match.objectives import Objectives
+from dataclass.match.ban import Ban, Ban, Ban
+from dataclass.match.objectives import Objectives, Objectives, Objectives
 
 
 class Team(BaseModel):

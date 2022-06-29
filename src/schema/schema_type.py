@@ -21,6 +21,31 @@ class SchemaType:
             return self.primary == other.primary and self.secondary == other.secondary and self.nullable == other.nullable
         return False
 
+    def getSecondary(self):
+        results = []
+        for secondary in self.secondary:
+            if isinstance(secondary, str):
+                element = secondary
+            elif isinstance(secondary, MyTypeDefault):
+                element = secondary.value
+            elif isinstance(secondary, SchemaType):
+                if len(secondary.secondary) == 0:
+                    print('*** get secondary', self)
+                element = secondary.secondary[0]
+                if isinstance(element, MyTypeDefault):
+                    element = element.value
+                if secondary.nullable:
+                    element = f"Optional[{element}]"
+            else:
+                element = secondary
+            results.append(element)
+        if len(results) == 1:
+            return results[0]
+        else:
+            return f"Union[{', '.join(results)}]"
+
+
+
     def hasClass(self):
         if self.primary is None:
             return False

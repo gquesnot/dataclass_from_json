@@ -127,7 +127,6 @@ class Challenges(BaseModel):
 
     def to_dict(self) -> Dict[str, Any]:
         data = self.dict()
-        data['12AssistStreakCount'] = data['_12AssistStreakCount']
         return data
 
     @classmethod

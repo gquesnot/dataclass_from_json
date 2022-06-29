@@ -21,7 +21,7 @@ class SchemaRoot:
     json_path: str = "jsons"
     template_path: str = "src\\templates"
 
-    def __init__(self, name, json_path="jsons", dtc_path="dataclass", template_path="src\\templates"):
+    def __init__(self, name, json_path="jsons", dtc_path="dataclass", template_path="src/templates"):
         self.name = name
         self.template = ""
         self.json_path = json_path
