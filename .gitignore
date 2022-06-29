@@ -121,6 +121,7 @@ venv.bak/
 # Rope project settings
 .ropeproject
 
+
 # mkdocs documentation
 /site
 
@@ -139,4 +140,8 @@ dmypy.json
 cython_debug/
 
 .idea/
+/pickles/*
+/dataclass/*
+/test_jsons/*
+
 
