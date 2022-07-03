@@ -141,7 +141,8 @@ cython_debug/
 
 .idea/
 /pickles/*
-/dataclass/*
 todo.txt
+/test_dataclass/*.py
+/test_jsons/*.json
 
 

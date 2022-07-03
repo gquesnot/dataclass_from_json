@@ -1,7 +1,4 @@
-import json
-from pprint import pprint
-
-from src.schema.schema_root import SchemaRoot
+from src.classes.schema_root import SchemaRoot
 
 #
 # @timeit
@@ -20,8 +17,8 @@ from src.schema.schema_root import SchemaRoot
 
 if __name__ == '__main__':
 
-    sb = SchemaRoot()
-    sb.generate("comps")
+    sb = SchemaRoot(json_path="test_jsons", dtc_path="test_dataclass")
+    sb.generate("summonerSpells")
     print(sb)
 
     # lvlController = LevelController()

@@ -70,6 +70,7 @@ def getXSpace(x):
 def keyIsAValidDictAttribute(key: str):
     return key.isalnum()
 
+
 def keyIsAValidAttribute(key: str):
     """
     Check if a key is a valid attribute.
@@ -82,7 +83,7 @@ def keyIsAValidAttribute(key: str):
         return False
     if not key.isidentifier():
         return False
-    if key in ('float', 'int', 'str', 'bool', 'None', 'list', 'dict', 'set', 'tuple', 'range', 'tuple', 'frozenset'):
+    if key in ('float', 'int', 'str', 'bool', 'None', 'list', 'dict', 'set', 'tuple', 'range', 'tuple', 'frozenset', 'type'):
         return False
 
     return True
@@ -106,3 +107,7 @@ def getSubKey(key):
     else:
         key = key + "Index"
     return key
+
+
+def getListDictSubKey(parentName, parentKey):
+    return getSubKey(parentName)

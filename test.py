@@ -1,11 +1,9 @@
 import json
-
-from dataclass.match.match import Match
+from test_dataclass.match_timeline import MatchTimeline
 
 if __name__ == '__main__':
-    with open('jsons/items.json') as f:
-        data = json.load(f)
-    match = Match(**data)
-    print(match)
 
+    with open('matchTimeline.json', 'r') as f:
+        data = json.load(f)
+    matchTl = MatchTimeline.from_dict(data)
 

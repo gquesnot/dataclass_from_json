@@ -1,25 +1,24 @@
 from dataclasses import dataclass, field
 from typing import Optional
 
-from src.enums.type_enum import MyTypeBase, ComplexType
+from src.enums.complex_type import ComplexType
 
 
 @dataclass
 class SchemaMatching:
     from_: Optional[str] = field(default=None)
+    rootListNotClass: bool = field(default=False)
 
 
 @dataclass
 class SchemaMapping:
     className: Optional[str] = field(default=None)
-    type_: Optional[MyTypeBase] = field(default=None)
-    nullable: bool = field(default=False)
 
 
 @dataclass
 class SchemaMappingMatching:
     key: str
-    nullable: bool = field(default=False)
+    type: Optional["MyType"] = field(default=None)
     mapping: SchemaMapping = field(default_factory=SchemaMapping)
     matching: SchemaMatching = field(default_factory=SchemaMatching)
 
@@ -34,11 +33,15 @@ class SchemaMappingMatching:
 
     def from_dict_str(self) -> str:
         result = ""
-        if self.hasMapping() and self.mapping.type_ == ComplexType.LIST_ROOT:
-            return ' ' * 8 + "data = {" \
-                             f"'{self.key}': [{self.getFromDictToDict('v')} for v in data]" \
-                             "}"
-        if self.nullable:
+        if self.type and self.type.isListRoot():
+
+            if self.type.child.isClass():
+                return ' ' * 8 + "data = {" \
+                                 f"'{self.key}': [{self.getFromDictToDict('v')} for v in data]" \
+                                 "}"
+            else:
+                return ' ' * 8 + "data = {" + f"'{self.key}': data" + "}"
+        if self.type and self.type.nullable:
             result += f"{' ' * 8}if '{self.key}' in data:\n"
         base = f"{self.getStrBefore()}data['{self.key}'] = "
         if self.hasMatching():
@@ -47,11 +50,9 @@ class SchemaMappingMatching:
             if not self.hasMapping():
                 result += "\n"
         if self.hasMapping():
-            if self.mapping.type_ == ComplexType.DICT_LIST:
-                result += f"{base}[{self.getFromDictToDict('v')} for v in data['{self.key}'].values()]\n"
-            elif self.mapping.type_ == ComplexType.LIST:
+            if self.type.isList():
                 result += f"{base}[{self.getFromDictToDict('v')} for v in data['{self.key}']]"
-            elif self.mapping.type_ == ComplexType.DICT:
+            elif self.type.isDict():
                 result += f"{base}{{k: {self.getFromDictToDict('v')} for k, v in data['{self.key}'].items()}}"
             else:
                 dataName = f"data['{self.key}']"
@@ -59,14 +60,14 @@ class SchemaMappingMatching:
         return result
 
     def getStrBefore(self):
-        return ' ' * (8 if not self.nullable else 12)
+        return ' ' * (12 if self.type and self.type.nullable else 8)
 
     def getFromDictToDict(self, dataName: str):
         return f"{self.mapping.className}.from_dict({dataName}).to_dict()"
 
     def to_dict_str(self) -> str:
         result = ""
-        if self.nullable and self.hasMatching():
+        if self.hasMatching() and self.hasMapping() and self.type.nullable:
             result += f"{' ' * 8}if '{self.key}' in data:\n"
         if self.hasMatching():
             result += f"{self.getStrBefore()}data['{self.matching.from_}'] = data['{self.key}']"

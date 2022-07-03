@@ -1,4 +1,0 @@
-
-# fix comps
-# fix matchTimeline
-#fix live_game
