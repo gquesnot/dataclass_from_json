@@ -140,10 +140,7 @@ dmypy.json
 cython_debug/
 
 .idea/
-/pickles/*
 todo.txt
-/test_dataclass/*.py
-/test_jsons/*.json
 todo.MD
 
 
