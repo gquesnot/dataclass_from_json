@@ -1,4 +1,4 @@
-from src.classes.schema_root import SchemaRoot
+from src.controllers.schema_root import SchemaRoot
 
 #
 # @timeit

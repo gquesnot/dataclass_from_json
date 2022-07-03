@@ -1,6 +1,6 @@
 import pytest
 
-from src.classes.schema_root import SchemaRoot
+from src.controllers.schema_root import SchemaRoot
 from src.dataclass.import_lol_jsons import ImportLolJsons
 
 json_path: str = "test_jsons"
