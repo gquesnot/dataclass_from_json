@@ -6,13 +6,14 @@ from src.dataclass.custom_type import CustomType
 from src.classes.schema_base import SchemaBase
 from src.classes.schema_dict import SchemaDict
 from src.classes.schema_list import SchemaList
+from src.enums.simple_type import SimpleType
 
 from src.utils.handle_path import multiple_path_joins, create_dir
 from src.utils.string_manipulation import (
     to_class_style,
     get_sub_key,
     key_is_a_valid_attribute,
-    snake_case,
+    snake_case, keys_to_enums,
 )
 
 
@@ -54,7 +55,8 @@ class SchemaClass(SchemaBase):
     def add_import(self, k, v):
         if k not in self.imports:
             self.imports[k] = []
-        self.imports[k].append(v)
+        if v not in self.imports[k]:
+            self.imports[k].append(v)
 
     def add_data(self, data):
         if data is None:
@@ -128,22 +130,36 @@ class SchemaClass(SchemaBase):
 
         return copy(self.root.enum_template).format(**params)
 
-    def dtc_to_string(self):
-        blue_print = self.get_blue_print()
+    def get_enum(self, enums, k, v):
+        enum_name = None
+        if not v or (v and not hasattr(v, 'child')):
+            return enums, enum_name
+        if not v.child:
+            return enums, enum_name
+        if isinstance(v, SchemaDict):
+            enum_name = f"{to_class_style(v.child.name)}Enum"
+            enums[enum_name] = keys_to_enums(v.keys)
+        elif isinstance(v, SchemaList) and v.child and v.child.type.simple == SimpleType.STRING:
+            name = v.name.replace('_list', '')
+            if name[-1] != "s":
+                return enums, enum_name
+            name = name[:-1]
+            datas = list(set(v.child.datas))
+            min_len = len(min(datas, key=len))
+            if len(datas) > 0 and 15 > min_len > 2:
+                print("enum list str", v, v.child)
+                enum_name = f"{to_class_style(name)}Enum"
+                enums[enum_name] = keys_to_enums(datas)
+
+        return enums, enum_name
+
+    def get_attributes_and_enums(self):
         attributes = []
         enums = dict()
         for k, v in self.properties.items():
             # ENUMS
-            enum_name = None
-            if v is not None and isinstance(v, SchemaDict) and v.child:
-                enum_name = f"{to_class_style(v.child.name)}Enum"
-                enums[enum_name] =\
-                    {k: v
-                        if not v[0].isnumeric() else f"_{v}"
-                        for k, v in
-                        {k: snake_case(k).upper()
-                            for k in sorted(list(v.keys))}.items()
-                     }
+            enums, enum_name = self.get_enum(enums, k, v)
+
             # Attributes
             if v is None:
                 attr_type = "Any"
@@ -156,9 +172,11 @@ class SchemaClass(SchemaBase):
                 attributes.append(attribute)
             else:
                 raise ("*** ATTRIBUTE ERROR", k, v)
+        return attributes, enums
 
-
-
+    def dtc_to_string(self):
+        blue_print = self.get_blue_print()
+        attributes, enums = self.get_attributes_and_enums()
 
         blue_print["attributes"] = "\n".join(attributes)
         if len(enums) > 0:
@@ -218,7 +236,6 @@ class SchemaClass(SchemaBase):
             final_path = self.get_ini_file_path()
             create_dir(final_path)
             final_path.append(f"{snake_case(self.name)}.py")
-            print(f"Writing {final_path}")
             with open(
                     multiple_path_joins(final_path),
                     "w",

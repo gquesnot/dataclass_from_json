@@ -130,3 +130,15 @@ def get_sub_key(key):
 
 def get_list_dict_sub_key(parent_name, parent_key):
     return get_sub_key(parent_name)
+
+
+def keys_to_enums(keys):
+    return {
+        k: v
+        if not v[0].isnumeric() else f"_{v}"
+        for k, v in
+        {
+            k: snake_case(k).upper().replace('.', '_')
+            for k in sorted(list(keys))
+        }.items()
+    }
