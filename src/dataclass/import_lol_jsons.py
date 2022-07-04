@@ -69,66 +69,64 @@ class ImportLolJsons:
         if self.RIOT_API_KEY is None:
             return False
         else:
-            self.datas["versions"] = self.do_get(self.urls["versions"])
-            self.datas["maps"] = self.do_get(self.urls["maps"])
-            self.datas["seasons"] = self.do_get(self.urls["seasons"])
-            self.datas["queues"] = self.do_get(self.urls["queues"])
-            self.datas["gameModes"] = self.do_get(self.urls["gameModes"])
-            self.datas["gameTypes"] = self.do_get(self.urls["gameTypes"])
-            self.datas["regions"] = self.do_get(self.urls["regions"])
-            self.datas["languages"] = self.do_get(self.urls["languages"])
-            self.datas["champions"] = self.do_get(
-                self.urls["champions"].format(version=self.datas["versions"][0])
-            )
-            self.datas["summonerSpells"] = self.do_get(
-                self.urls["summonerSpells"].format(
-                    version=self.datas["versions"][0]
-                )
-            )
-            self.datas["profileIcons"] = self.do_get(
-                self.urls["profileIcons"].format(version=self.datas["versions"][0])
-            )
-            self.datas["items"] = self.do_get(
-                self.urls["items"].format(version=self.datas["versions"][0])
-            )
-            print()
-            self.datas["featuredMatches"] = self.do_get(self.urls["featuredMatches"])
-            summoner_name = self.datas["featuredMatches"]["gameList"][0]["participants"][0]["summonerName"]
-
-            self.datas["summoner"] = self.do_get(
-                self.urls["summoner"].format(name=summoner_name)
-            )
-            self.datas["spectator"] = self.do_get(
-                self.urls["spectator"].format(
-                    encryptedSummonerId=self.datas["summoner"]["id"]
-                )
-            )
-            self.datas["matches"] = self.do_get(
-                self.urls["matches"].format(puuid=self.datas["summoner"]["puuid"])
-            )
-            match_id = self.datas["matches"][0]
-            self.datas["match"] = self.do_get(
-                self.urls["match"].format(matchId=match_id)
-            )
-            self.datas["matchTimeline"] = self.do_get(
-                self.urls["matchTimeline"].format(matchId=match_id)
-            )
-            self.datas["challenges"] = self.do_get(
-                self.urls["challenges"].format(
-                    puuid=self.datas["summoner"]["puuid"]
-                )
-            )
-            self.datas["championsMasteries"] = self.do_get(
-                self.urls["championsMasteries"].format(
-                    encryptedSummonerId=self.datas["summoner"]["id"]
-                )
-            )
-
-            for k, v in self.datas.items():
-                with open(f"{self.json_path}/{k}.json", "w") as f:
-                    f.write(json.dumps(v))
             try:
-                pass
+                self.datas["versions"] = self.do_get(self.urls["versions"])
+                self.datas["maps"] = self.do_get(self.urls["maps"])
+                self.datas["seasons"] = self.do_get(self.urls["seasons"])
+                self.datas["queues"] = self.do_get(self.urls["queues"])
+                self.datas["gameModes"] = self.do_get(self.urls["gameModes"])
+                self.datas["gameTypes"] = self.do_get(self.urls["gameTypes"])
+                self.datas["regions"] = self.do_get(self.urls["regions"])
+                self.datas["languages"] = self.do_get(self.urls["languages"])
+                self.datas["champions"] = self.do_get(
+                    self.urls["champions"].format(version=self.datas["versions"][0])
+                )
+                self.datas["summonerSpells"] = self.do_get(
+                    self.urls["summonerSpells"].format(
+                        version=self.datas["versions"][0]
+                    )
+                )
+                self.datas["profileIcons"] = self.do_get(
+                    self.urls["profileIcons"].format(version=self.datas["versions"][0])
+                )
+                self.datas["items"] = self.do_get(
+                    self.urls["items"].format(version=self.datas["versions"][0])
+                )
+                print()
+                self.datas["featuredMatches"] = self.do_get(self.urls["featuredMatches"])
+                summoner_name = self.datas["featuredMatches"]["gameList"][0]["participants"][0]["summonerName"]
+
+                self.datas["summoner"] = self.do_get(
+                    self.urls["summoner"].format(name=summoner_name)
+                )
+                self.datas["spectator"] = self.do_get(
+                    self.urls["spectator"].format(
+                        encryptedSummonerId=self.datas["summoner"]["id"]
+                    )
+                )
+                self.datas["matches"] = self.do_get(
+                    self.urls["matches"].format(puuid=self.datas["summoner"]["puuid"])
+                )
+                match_id = self.datas["matches"][0]
+                self.datas["match"] = self.do_get(
+                    self.urls["match"].format(matchId=match_id)
+                )
+                self.datas["matchTimeline"] = self.do_get(
+                    self.urls["matchTimeline"].format(matchId=match_id)
+                )
+                self.datas["challenges"] = self.do_get(
+                    self.urls["challenges"].format(
+                        puuid=self.datas["summoner"]["puuid"]
+                    )
+                )
+                self.datas["championsMasteries"] = self.do_get(
+                    self.urls["championsMasteries"].format(
+                        encryptedSummonerId=self.datas["summoner"]["id"]
+                    )
+                )
+                for k, v in self.datas.items():
+                    with open(f"{self.json_path}/{k}.json", "w") as f:
+                        f.write(json.dumps(v))
             except Exception as e:
                 print(e)
                 return False

@@ -27,7 +27,7 @@ class SchemaRoot:
     template_path: str = "src\\templates"
 
     def __init__(
-            self, json_path="jsons", dtc_path="dataclass", template_path="src/templates"
+            self, json_path="jsons", dtc_path="dataclass", template_path="src\\templates"
     ):
         self.template = ""
         self.json_path = json_path
@@ -166,16 +166,16 @@ class SchemaRoot:
     def generate_init_file(self):
         for k, child in self.children.items():
             if child.type.is_class():
-                self.imports[child.name] = child.name
-        self.imports[self.root.name] = self.root.name
+                self.imports[child.get_import_string(child.get_ini_file_path(), True, False)] = child.name
+        self.imports[self.root.get_import_string(self.root.get_ini_file_path(), True, False)] = self.root.name
         with open(
                 multiple_path_joins([self.dtc_path, snake_case(self.name), "__init__.py"]), "w"
         ) as f:
             f.write(
                 "\n".join(
                     [
-                        f"from {self.dtc_path}.{snake_case(self.name)}.{snake_case(import_)} import {to_class_style(import_)}"
-                        for import_ in self.imports
+                        f"from {path} import {to_class_style(import_)}"
+                        for path, import_ in self.imports.items()
                     ]
                 )
                 + "\n"

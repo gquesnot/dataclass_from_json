@@ -7,7 +7,7 @@ from src.classes.schema_base import SchemaBase
 from src.classes.schema_dict import SchemaDict
 from src.classes.schema_list import SchemaList
 
-from src.utils.handle_path import multiple_path_joins
+from src.utils.handle_path import multiple_path_joins, create_dir
 from src.utils.string_manipulation import (
     to_class_style,
     get_sub_key,
@@ -102,7 +102,7 @@ class SchemaClass(SchemaBase):
                 class_name = to_class_style(v.type.name)
                 new_mapping.type = v.type
                 new_mapping.mapping.className = class_name
-                self.add_import(snake_case(v.type.name), class_name)
+                self.add_import(self.get_import_string(self.get_ini_file_path(), True) + f".{snake_case(class_name)}", class_name)
                 self.mappings[k] = new_mapping
                 v.scan_for_mappings()
             elif self.type.is_list_root():
@@ -112,7 +112,7 @@ class SchemaClass(SchemaBase):
                 self.mappings[k] = new_mapping
                 if self.type.has_class() and v.child.type.is_class():
                     self.add_import(
-                        snake_case(v.child.type.name), to_class_style(v.child.type.name)
+                        self.get_import_string(self.get_ini_file_path(), False, False)+f".{snake_case(v.child.type.name)}", to_class_style(v.child.type.name)
                     )
                     new_mapping.mapping.className = to_class_style(v.child.name)
                     v.scan_for_mappings()
@@ -137,7 +137,7 @@ class SchemaClass(SchemaBase):
             blue_print["imports"] = (
                     "\n".join(
                         [
-                            f"from {self.root.dtc_path}.{snake_case(self.root.name)}.{snake_case(k)} import "
+                            f"from {k} import "
                             + ", ".join([str(v) for v in imports])
                             for k, imports in self.imports.items()
                         ]
@@ -157,21 +157,38 @@ class SchemaClass(SchemaBase):
             ]
             if len(from_mapping) > 0:
                 blue_print["from_dict_mapping"] = "\n" + "\n".join(from_mapping)
-            # if len(to_mapping) > 0:
-            #    blue_print["to_dict_mapping"] = "\n" + "\n".join(to_mapping)
         return copy(self.root.template).format(**blue_print)
+
+    def get_base_file_path(self):
+        return [self.root.dtc_path, snake_case(self.root.name)]
+
+    def get_ini_file_path(self) -> list:
+        after = [self.root.dtc_path, snake_case(self.root.name)]
+        if not self.parent:
+            return after
+        result = []
+        parent = self.parent
+        while parent:
+            if parent.type.is_class():
+                result.append(f"{snake_case(parent.name)}_")
+            parent = parent.parent
+        after.reverse()
+        result.extend(after)
+        result.reverse()
+        return result
+
+    def get_import_string(self, paths,with_name=False, _after=True):
+        return ".".join(paths + ([snake_case(self.name)+ ("_" if _after else '')] if with_name else []))
 
     def generate_class(self):
         if self.type.has_class():
             dataclass_str = self.dtc_to_string()
+            final_path = self.get_ini_file_path()
+            create_dir(final_path)
+            final_path.append(f"{snake_case(self.name)}.py")
+            print(f"Writing {final_path}")
             with open(
-                    multiple_path_joins(
-                        [
-                            self.root.dtc_path,
-                            snake_case(self.root.name),
-                            f"{snake_case(self.name)}.py",
-                        ]
-                    ),
+                    multiple_path_joins(final_path),
                     "w",
             ) as f:
                 f.write(dataclass_str)
