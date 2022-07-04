@@ -1,11 +1,14 @@
 import json
 from test_dataclass.champions import Champions
+from test_dataclass.champions.champions_.data_index import StatEnum, DataIndex
 
 if __name__ == "__main__":
-    with open("test_jsons/champions.json", "r") as f:
-        data = json.load(f)
-    champions = Champions.from_dict(data)
-    print(champions.get_dataindex_enum().values())
-    print(champions.get_dataindex_enum().keys())
-    # for champName, champion in champions.data.items():
+    statEnum = DataIndex.get_stat_enum()
+    tagEnum = DataIndex.get_tag_enum()
+
+    # champions = Champions.from_dict(data)
+    # test1=champions.get_dataindex_enum().values()
+    # test = champions.get_dataindex_enum().keys()
+    # print(test1)
+    # for   champName, champion in champions.data.items():
     #     print(champName, type(champName))

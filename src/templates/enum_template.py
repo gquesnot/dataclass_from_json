@@ -1,14 +1,11 @@
-from strenum import StrEnum
 
 class {className}(StrEnum):
 {params}
 
-    @staticmethod
-    def keys() -> List[str]:
-        return list({className}.__members__.values())
+    @classmethod
+    def values(cls) -> List[str]:
+        return list(map(lambda c: c.value, cls))
 
-    @staticmethod
-    def values() -> List['{className}']:
-        return list({className}.__members__.keys())
-
-
+    @classmethod
+    def keys(cls) -> List["{className}"]:
+        return list(map(lambda c: c, cls))

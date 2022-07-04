@@ -130,7 +130,7 @@ class SchemaClass(SchemaBase):
 
         return copy(self.root.enum_template).format(**params)
 
-    def get_enum(self, enums, k, v) -> Tuple[Dict[str, Dict[str,str]], Optional[str], bool]:
+    def get_enum(self, enums, k, v) -> Tuple[Dict[str, Dict[str, str]], Optional[str], bool]:
         enum_name = None
         is_new_attribute = False
         if not v or (v and not hasattr(v, 'child')):
@@ -157,16 +157,17 @@ class SchemaClass(SchemaBase):
 
         return enums, enum_name, is_new_attribute
 
-    def get_function_has_enum(self, k,name, enum_name):
-        return f"{' ' * 4}def has_{name}(self, {name}:{enum_name}) -> bool:\n"\
+    def get_function_has_enum(self, k, name, enum_name):
+        return f"{' ' * 4}def has_{name}(self, {name}:{enum_name}) -> bool:\n" \
                f"{' ' * 8}return {name} in self.{k}\n"
 
     def get_function_get_enum(self, name, enum_name):
-        return f"{' ' * 4}def get_{name}_enum(self) -> Type[{enum_name}]:\n"\
-               f"{' ' * 8}return {enum_name}"
 
+        return f"{' ' * 4}@staticmethod\n" \
+               f"{' ' * 4}def get_{name}_enum() -> Type[{enum_name}]:\n" \
+               f"{' ' * 8}return {enum_name}\n"
 
-    def get_attributes_and_enums(self) -> Tuple[List, Dict[str, Dict[str,str]], List]:
+    def get_attributes_and_enums(self) -> Tuple[List, Dict[str, Dict[str, str]], List]:
         attributes = []
         attributes_after = []
         functions = []
@@ -199,9 +200,9 @@ class SchemaClass(SchemaBase):
         if len(enums) > 0:
             blue_print["enums"] = "\n".join(
                 [self.get_enum_str(k, v) for k, v in enums.items()]
-            )
+            ) + "\n"
         if len(functions) > 0:
-            blue_print['functions'] = "\n" + "\n".join(functions) + "\n"
+            blue_print['functions'] = "\n" + "\n".join(functions)
         if len(self.imports) > 0:
             blue_print["imports"] = (
                     "\n".join(
