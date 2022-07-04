@@ -1,15 +1,14 @@
-Dataclass from json
+Json to Dataclass
 ==================
 
-Dataclass from json is a class to generate dataclass from json and write them in a file.
+Generate typed dataclass from json file or url.
 
-Look at tests to see how to use it
 
 ## Installation
 
 ```bash
 pip install -r requirements.txt
-# or 
+# or using poetry
 poetry install
 ```
 
