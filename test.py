@@ -1,7 +1,5 @@
 import json
-
 from test_dataclass.champions import Champions
-from test_dataclass.champions.champions import DataIndexEnum
 
 if __name__ == "__main__":
     with open("test_jsons\\champions.json", "r") as f:

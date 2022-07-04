@@ -15,9 +15,9 @@ lol_api_europe = "https://europe.api.riotgames.com"
 @dataclass
 class ImportLolJsons:
     json_path: str
+    len_files:int= field(default=0)
     session: Optional[requests.session] = field(default=None)
     RIOT_API_KEY: Optional[str] = field(default=None)
-    len_files = 15
     datas: Dict[str, Any] = field(default_factory=dict)
 
     urls = {
@@ -92,7 +92,6 @@ class ImportLolJsons:
                 self.datas["items"] = self.do_get(
                     self.urls["items"].format(version=self.datas["versions"][0])
                 )
-                print()
                 self.datas["featuredMatches"] = self.do_get(self.urls["featuredMatches"])
                 summoner_name = self.datas["featuredMatches"]["gameList"][0]["participants"][0]["summonerName"]
 
