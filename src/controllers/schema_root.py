@@ -37,6 +37,7 @@ class SchemaRoot:
         self.template_path = multiple_path_joins(["src", "templates"])
         self.get_templates()
         self.copy_base_data_class()
+        self.copy_base_enum()
 
     def get_templates(self):
         with open(multiple_path_joins([self.template_path, "class_template.py"]), "r") as f:
@@ -44,6 +45,12 @@ class SchemaRoot:
         with open(multiple_path_joins([self.template_path, "enum_template.py"]), "r") as f:
             self.enum_template = f.read()
 
+    def copy_base_enum(self):
+        template_base_enum_path = multiple_path_joins(
+            [self.template_path, "base_enum.py"]
+        )
+        dest_base_enum_path = multiple_path_joins([self.dtc_path, "base_enum.py"])
+        shutil.copyfile(template_base_enum_path, dest_base_enum_path)
 
     def copy_base_data_class(self):
         template_base_data_class_path = multiple_path_joins(

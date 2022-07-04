@@ -139,7 +139,9 @@ class SchemaClass(SchemaBase):
             return enums, enum_name, is_new_attribute
         if isinstance(v, SchemaDict):
             enum_name = f"{to_class_style(v.child.name)}Enum"
+            is_new_attribute = True
             enums[enum_name] = keys_to_enums(v.keys)
+
         elif isinstance(v, SchemaList) and v.child and v.child.type.simple == SimpleType.STRING:
             name = v.name.replace('_list', '')
             if name[-1] != "s":
@@ -155,6 +157,15 @@ class SchemaClass(SchemaBase):
 
         return enums, enum_name, is_new_attribute
 
+    def get_function_has_enum(self, k,name, enum_name):
+        return f"{' ' * 4}def has_{name}(self, {name}:{enum_name}) -> bool:\n"\
+               f"{' ' * 8}return {name} in self.{k}\n"
+
+    def get_function_get_enum(self, name, enum_name):
+        return f"{' ' * 4}def get_{name}_enum(self) -> Type[{enum_name}]:\n"\
+               f"{' ' * 8}return {enum_name}"
+
+
     def get_attributes_and_enums(self) -> Tuple[List, Dict[str, Dict[str,str]], List]:
         attributes = []
         attributes_after = []
@@ -163,14 +174,9 @@ class SchemaClass(SchemaBase):
         for k, v in self.properties.items():
             enums, enum_name, is_new_attribute = self.get_enum(enums, k, v)
             if is_new_attribute:
-                attributes_after.append(
-                    f"{' ' * 4}{enum_name}: {enum_name} = {enum_name}"
-                )
                 name = enum_name.replace('Enum', '').lower()
-                functions.append(
-                    f"{' ' * 4}def has_{name}(self, {name}:{enum_name}) -> bool:\n"
-                    f"{' ' * 8}return {name} in self.{k}"
-                )
+                functions.append(self.get_function_has_enum(k, name, enum_name))
+                functions.append(self.get_function_get_enum(name, enum_name))
             if v is None:
                 attr_type = "Any"
                 default_value = "None"
