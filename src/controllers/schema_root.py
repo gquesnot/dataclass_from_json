@@ -38,13 +38,11 @@ class SchemaRoot:
         self.get_templates()
         self.copy_base_data_class()
 
-
     def get_templates(self):
         with open(multiple_path_joins([self.template_path, "class_template.py"]), "r") as f:
             self.class_template = f.read()
         with open(multiple_path_joins([self.template_path, "enum_template.py"]), "r") as f:
             self.enum_template = f.read()
-
 
     def copy_base_data_class(self):
         template_base_data_class_path = multiple_path_joins(
@@ -58,10 +56,11 @@ class SchemaRoot:
         self.children = dict()
         self.imports = dict()
 
-    def generate(self, name):
+    def generate(self, name, data=None):
         self.reset()
         self.name = name
-        data = self.get_data()
+        if not data:
+            data = self.get_data()
         self.clear_dest_directory()
         if isinstance(data, dict):
             type_ = CustomType(simple=SimpleType.DICT, complex=ComplexType.CLASS)

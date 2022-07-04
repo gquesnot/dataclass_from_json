@@ -17,30 +17,28 @@ poetry install
 
 ### Create a dataclass from json
 
-```python
-from src.controllers.schema_root import SchemaRoot
-
-if __name__ == "__main__":
-    schema_root = SchemaRoot(json_path="test_jsons", dtc_path="test_dataclass")
-    schema_root.generate("champions")
-```
-
-### Load the dataclass
-
-```python
-import json
-from test_dataclass.champions import Champions
-
-if __name__ == "__main__":
-    with open("test_jsons\\champions.json", "r") as f:
-        data = json.load(f)
-    champions = Champions.from_dict(data)
+```bash
+usage: python main.py [-h] [--generate-only] [--load-only] [--show-data] [--show-schema] [--name NAME] [--output OUTPUT] [--verbose] {json,url} input [input ...]
+                                                                                                                                                          
+positional arguments:                                                                                                                                     
+  {json,url}       chose between raw json or url                                                                                                          
+  input            url or json file or directory                                                                                                          
+                                                                                                                                                          
+options:                                                                                                                                                  
+  -h, --help       show this help message and exit                                                                                                        
+  --generate-only  Only generate the dataclass                                                                                                            
+  --load-only      Only load the dataclass                                                                                                                
+  --show-data      show datas if --with-data                                                                                                              
+  --show-schema    show dtc schema                                                                                                                        
+  --name NAME      name of the dataclass required if url                                                                                                  
+  --output OUTPUT  where to write class                                                                                                                   
+  --verbose        verbose mode # not implemented
 ```
 
 ## Test
 
 ```bash
-  pytest . --no-header --no-summary -q
+  python test.py
 ```
 
 

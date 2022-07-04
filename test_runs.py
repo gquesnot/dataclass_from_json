@@ -9,7 +9,7 @@ imports = ImportLolJsons(json_path)
 sr = SchemaRoot(json_path=json_path, dtc_path=dtc_path)
 
 
-@pytest.mark.order2
+@pytest.mark.trylast
 class TestRuns:
     @pytest.fixture
     def jump_line(self):

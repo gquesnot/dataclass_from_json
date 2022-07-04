@@ -1,14 +1,17 @@
 import argparse
+import os
 
-from src.controllers.level_controller import LevelController
+import requests
+
+from src.controllers.schema_controller import SchemaController
 
 if __name__ == "__main__":
     args = argparse.ArgumentParser()
+    args.add_argument("type", type=str,help="chose between raw json or url", choices=["json", "url"])
     args.add_argument(
-        "names",
+        "input",
         nargs="+",
-        help="Names of the classes to generate / name of the json file without "
-             ".json, separated by spaces",
+        help="url or json file or directory",
     )
     args.add_argument(
         "--generate-only", help="Only generate the dataclass", action="store_true"
@@ -17,29 +20,22 @@ if __name__ == "__main__":
         "--load-only", help="Only load the dataclass", action="store_true"
     )
     args.add_argument(
-        "--with-data", help="load the dataclass with data", action="store_true"
-    )
-    args.add_argument(
         "--show-data", help="show datas if --with-data", action="store_true"
     )
     args.add_argument(
-        "--json_path", help="path to json directory", type=str, default="jsons"
+        "--show-schema", help="show dtc schema", action="store_true"
     )
     args.add_argument(
-        "--dtc_path",
-        help="path to the directory where you want to store the dataclasses",
+        "--name", help="name of the dataclass required if url", type=str, default=None
+    )
+
+    args.add_argument(
+        "--output",
+        help="where to write class",
         type=str,
-        default="dataclass",
+        default="test_dataclass",
     )
     args.add_argument("--verbose", help="verbose mode", action="store_true")
     args = args.parse_args()
-    controller = LevelController(
-        json_path=args.json_path, dtc_path=args.dtc_path, verbose=args.verbose
-    )
-    if not args.load_only:
-        controller.generate(args.names)
-    if not args.generate_only:
-        controller.load(args.names)
-        datas = controller.getClass(args.names, withDatas=args.with_data)
-        if args.show_data and args.with_data or not args.with_data:
-            print(datas)
+    sc = SchemaController(args)
+    sc.generate_all()
