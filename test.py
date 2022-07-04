@@ -1,7 +1,10 @@
 import json
-from test_dataclass.match_timeline import MatchTimeline
+
+from test_dataclass.champions import Champions
 
 if __name__ == "__main__":
-    with open("matchTimeline.json", "r") as f:
+    with open("test_jsons\\champions.json", "r") as f:
         data = json.load(f)
-    match_tl = MatchTimeline.from_dict(data)
+    champions = Champions.from_dict(data)
+    for champName, champion in champions.data.items():
+        print(champName, type(champName))

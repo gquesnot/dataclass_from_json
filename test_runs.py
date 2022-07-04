@@ -20,7 +20,7 @@ class TestRuns:
         assert imports.check_jsons_ok() is True
 
     def do_run(self, name):
-        return sr.load_from_json(name)
+        return sr.load_from_json(name, print_schema=True)
 
     @pytest.mark.usefixtures("jump_line")
     def test_run_versions(self):

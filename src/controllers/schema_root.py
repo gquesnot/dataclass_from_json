@@ -21,7 +21,8 @@ class SchemaRoot:
     children: Dict[str, Any] = dict()
     imports: Dict[str, Any] = dict()
     name: str
-    template: str
+    class_template: str
+    enum_template = str
     dtc_path: str = "dataclass"
     json_path: str = "jsons"
     template_path: str = "src\\templates"
@@ -29,16 +30,19 @@ class SchemaRoot:
     def __init__(
             self, json_path="jsons", dtc_path="dataclass", template_path="src\\templates"
     ):
-        self.template = ""
+        self.class_template = ""
         self.json_path = json_path
         self.dtc_path = dtc_path
         self.template_path = template_path
-        self.get_template()
+        self.get_templates()
         self.copy_base_data_class()
 
-    def get_template(self):
-        with open(multiple_path_joins([self.template_path, "template.py"]), "r") as f:
-            self.template = f.read()
+    def get_templates(self):
+        with open(multiple_path_joins([self.template_path, "class_template.py"]), "r") as f:
+            self.class_template = f.read()
+        with open(multiple_path_joins([self.template_path, "enum_template.py"]), "r") as f:
+            self.enum_template = f.read()
+
 
     def copy_base_data_class(self):
         template_base_data_class_path = multiple_path_joins(
@@ -132,11 +136,11 @@ class SchemaRoot:
         return self.get_child_or_new_child(name, type_, data, parent, force_nullable)
 
     # dynamic loading
-    def load_from_json(self, name):
+    def load_from_json(self, name, print_schema=False):
         with open(multiple_path_joins([self.json_path, name + ".json"]), "r") as f:
             data = json.load(f)
         self.load(name)
-        return self.get(name, data)
+        return self.get(name, data, print_schema=print_schema)
 
     def load(self, name):
         if name not in self.modules:
@@ -157,10 +161,12 @@ class SchemaRoot:
                 f"{self.dtc_path}.{snake_case(name)}", fromlist=classes_name
             )
 
-    def get(self, name, datas):
+    def get(self, name, datas, print_schema=False):
         if name not in self.modules:
             self.load(name)
         _class = getattr(self.modules[name], to_class_style(name))
+        if print_schema:
+            print(_class.schema_json(indent=2))
         return _class().from_dict(datas)
 
     def generate_init_file(self):

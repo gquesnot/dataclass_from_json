@@ -58,7 +58,7 @@ class CustomType:
         else:
             return f"Field(default={default})"
 
-    def to_string(self):
+    def to_string(self, enum_name: Optional[str] = None):
         result = ""
         if self.is_none():
             return "Any"
@@ -75,9 +75,9 @@ class CustomType:
                 result = to_class_style(self.name)
             elif self.is_dict():
                 if self.has_class():
-                    result = f"Dict[str, {to_class_style(self.name)}]"
+                    result = f"Dict[{'str' if not enum_name else enum_name}, {to_class_style(self.name)}]"
                 else:
-                    result = f"Dict[str, {self.child.to_string()}]"
+                    result = f"Dict[{'str' if not enum_name else enum_name}, {self.child.to_string()}]"
             elif self.is_list():
                 if self.has_class():
                     result = f"List[{to_class_style(self.name)}]"

@@ -102,7 +102,8 @@ class SchemaClass(SchemaBase):
                 class_name = to_class_style(v.type.name)
                 new_mapping.type = v.type
                 new_mapping.mapping.className = class_name
-                self.add_import(self.get_import_string(self.get_ini_file_path(), True) + f".{snake_case(class_name)}", class_name)
+                self.add_import(self.get_import_string(self.get_ini_file_path(), True) + f".{snake_case(class_name)}",
+                                class_name)
                 self.mappings[k] = new_mapping
                 v.scan_for_mappings()
             elif self.type.is_list_root():
@@ -112,27 +113,58 @@ class SchemaClass(SchemaBase):
                 self.mappings[k] = new_mapping
                 if self.type.has_class() and v.child.type.is_class():
                     self.add_import(
-                        self.get_import_string(self.get_ini_file_path(), False, False)+f".{snake_case(v.child.type.name)}", to_class_style(v.child.type.name)
+                        self.get_import_string(self.get_ini_file_path(), False,
+                                               False) + f".{snake_case(v.child.type.name)}",
+                        to_class_style(v.child.type.name)
                     )
                     new_mapping.mapping.className = to_class_style(v.child.name)
                     v.scan_for_mappings()
 
+    def get_enum_str(self, key, values) -> str:
+        params = {
+            "className": key,
+            "params": "\n".join([f"{' ' * 4}{v} = '{k}'" for k, v in values.items()])
+        }
+
+        return copy(self.root.enum_template).format(**params)
+
     def dtc_to_string(self):
         blue_print = self.get_blue_print()
         attributes = []
+        enums = dict()
         for k, v in self.properties.items():
+            # ENUMS
+            enum_name = None
+            if v is not None and isinstance(v, SchemaDict) and v.child:
+                enum_name = f"{to_class_style(v.child.name)}Enum"
+                enums[enum_name] =\
+                    {k: v
+                        if not v[0].isnumeric() else f"_{v}"
+                        for k, v in
+                        {k: snake_case(k).upper()
+                            for k in sorted(list(v.keys))}.items()
+                     }
+            # Attributes
             if v is None:
                 attr_type = "Any"
                 default_value = "None"
             else:
-                attr_type = v.type.to_string()
+                attr_type = v.type.to_string(enum_name)
                 default_value = v.type.get_default_with_field()
             attribute = f"{' ' * 4}{k}: {attr_type} = {default_value}"
             if attr_type is not None:
                 attributes.append(attribute)
             else:
                 raise ("*** ATTRIBUTE ERROR", k, v)
+
+
+
+
         blue_print["attributes"] = "\n".join(attributes)
+        if len(enums) > 0:
+            blue_print["enums"] = "\n".join(
+                [self.get_enum_str(k, v) for k, v in enums.items()]
+            )
         if len(self.imports) > 0:
             blue_print["imports"] = (
                     "\n".join(
@@ -157,7 +189,7 @@ class SchemaClass(SchemaBase):
             ]
             if len(from_mapping) > 0:
                 blue_print["from_dict_mapping"] = "\n" + "\n".join(from_mapping)
-        return copy(self.root.template).format(**blue_print)
+        return copy(self.root.class_template).format(**blue_print)
 
     def get_base_file_path(self):
         return [self.root.dtc_path, snake_case(self.root.name)]
@@ -177,8 +209,8 @@ class SchemaClass(SchemaBase):
         result.reverse()
         return result
 
-    def get_import_string(self, paths,with_name=False, _after=True):
-        return ".".join(paths + ([snake_case(self.name)+ ("_" if _after else '')] if with_name else []))
+    def get_import_string(self, paths, with_name=False, _after=True):
+        return ".".join(paths + ([snake_case(self.name) + ("_" if _after else '')] if with_name else []))
 
     def generate_class(self):
         if self.type.has_class():
@@ -207,6 +239,7 @@ class SchemaClass(SchemaBase):
             "to_dict_mapping": "",
             "from_dict_mapping": "",
             "variant": "",
+            "enums": "",
         }
 
     def __str__(self):

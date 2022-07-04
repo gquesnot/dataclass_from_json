@@ -1,7 +1,8 @@
 from typing import Dict, Any, List, Union, Optional
+from strenum import StrEnum
 from pydantic import Field, BaseModel
 {imports}
-
+{enums}
 class {className}(BaseModel{variant}):
 {attributes}
 
