@@ -1,6 +1,7 @@
 import json
 import os
 from dataclasses import dataclass, field
+from time import sleep
 from typing import Optional, Dict, Any
 
 import requests
@@ -107,6 +108,7 @@ class ImportLolJsons:
                     self.urls["matches"].format(puuid=self.datas["summoner"]["puuid"])
                 )
                 match_id = self.datas["matches"][0]
+                sleep(.5)
                 self.datas["match"] = self.do_get(
                     self.urls["match"].format(matchId=match_id)
                 )

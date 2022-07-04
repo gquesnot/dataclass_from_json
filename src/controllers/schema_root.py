@@ -23,17 +23,18 @@ class SchemaRoot:
     name: str
     class_template: str
     enum_template = str
+    template_path: str
     dtc_path: str = "dataclass"
     json_path: str = "jsons"
-    template_path: str = "src\\templates"
 
     def __init__(
-            self, json_path="jsons", dtc_path="dataclass", template_path="src\\templates"
+            self, json_path="jsons", dtc_path="dataclass"
     ):
         self.class_template = ""
+        self.enum_template = ""
         self.json_path = json_path
         self.dtc_path = dtc_path
-        self.template_path = template_path
+        self.template_path = multiple_path_joins(["src", "templates"])
         self.get_templates()
         self.copy_base_data_class()
 
