@@ -7,8 +7,13 @@ from src.classes.schema_base import SchemaBase
 from src.classes.schema_dict import SchemaDict
 from src.classes.schema_list import SchemaList
 
-from src.utils.handle_path import multiplePathJoins
-from src.utils.string_manipulation import toClassStyle, getSubKey, keyIsAValidAttribute, snakeCase
+from src.utils.handle_path import multiple_path_joins
+from src.utils.string_manipulation import (
+    to_class_style,
+    get_sub_key,
+    key_is_a_valid_attribute,
+    snake_case,
+)
 
 
 class SchemaClass(SchemaBase):
@@ -16,7 +21,7 @@ class SchemaClass(SchemaBase):
     This class is used to be a class that represent a dict
     """
 
-    def getSignature(self):
+    def get_signature(self):
         return set(self.properties.keys())
 
     required: Set[str]
@@ -24,146 +29,163 @@ class SchemaClass(SchemaBase):
     mappings: Dict[str, SchemaMappingMatching]
     properties: Dict[str, Union["SchemaClass", "SchemaList", "SchemaDefault"]]
 
-    def __init__(self,
-                 name: str,
-                 path: str,
-                 data,
-                 type_: "CustomType",
-                 root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict',
-                                        'SchemaList',
-                                        'SchemaClass']] = None):
+    def __init__(
+            self,
+            name: str,
+            path: str,
+            data,
+            type_: "CustomType",
+            root: "SchemaRoot",
+            parent: Optional[Union["SchemaDict", "SchemaList", "SchemaClass"]] = None,
+    ):
 
         self.mappings = dict()
         self.properties = dict()
         self.required = set()
         self.imports = dict()
         super().__init__(name, path, type_, root, parent)
-        if self.parent is None and self.type.isListRoot():
+        if self.parent is None and self.type.is_list_root():
             data = {name: data}
-            subKey = getSubKey(name)
-            self.type.name = toClassStyle(subKey)
+            sub_key = get_sub_key(name)
+            self.type.name = to_class_style(sub_key)
         if self.parent is None:
-            self.addData(data)
+            self.add_data(data)
 
-    def addImport(self, k, v):
+    def add_import(self, k, v):
         if k not in self.imports:
             self.imports[k] = []
         self.imports[k].append(v)
 
-    def addData(self, data):
+    def add_data(self, data):
         if data is None:
-            self.type.setNullable()
+            self.type.set_nullable()
         else:
-            super().addData(data)
+            super().add_data(data)
             for k, v in data.items():
-                newKey = k if keyIsAValidAttribute(k) else f"_{k}"
-                if newKey != k:
-                    self.addMatching(k, newKey)
-                newSchema = self.root.addSchemaOrData(newKey, v, self)
-                self.properties[newKey] = newSchema
+                new_key = k if key_is_a_valid_attribute(k) else f"_{k}"
+                if new_key != k:
+                    self.add_matching(k, new_key)
+                new_schema = self.root.add_schema_or_data(new_key, v, self)
+                self.properties[new_key] = new_schema
 
-    def addMatching(self, key, newKey, rootListNotClass=False, nullable=False):
+    def add_matching(self, key, new_key, root_list_not_class=False, nullable=False):
         if key not in self.mappings:
-            self.mappings[newKey] = SchemaMappingMatching(
-                key=newKey, type=CustomType(
-                    nullable=True), matching=SchemaMatching(
-                    from_=key, rootListNotClass=rootListNotClass))
+            self.mappings[new_key] = SchemaMappingMatching(
+                key=new_key,
+                type=CustomType(nullable=True),
+                matching=SchemaMatching(from_=key, root_list_not_class=root_list_not_class),
+            )
         else:
-            self.mappings[newKey].matching.from_ = key
-            self.mappings[newKey].matching.rootListNotClass = rootListNotClass
+            self.mappings[new_key].matching.from_ = key
+            self.mappings[new_key].matching.root_list_not_class = root_list_not_class
 
-    def scanRequired(self):
-        baseLen = len(self.datas)
+    def scan_required(self):
+        base_len = len(self.datas)
         for k, v in self.properties.items():
             if v is None:
                 continue
-            elif len(v.datas) == baseLen:
+            elif len(v.datas) == base_len:
                 self.required.add(k)
             else:
-                v.type.setNullable()
+                v.type.set_nullable()
         for k, v in self.properties.items():
             if v is None:
                 continue
-            v.scanRequired()
+            v.scan_required()
 
-    def scanForMappings(self):
+    def scan_for_mappings(self):
         for k, v in self.properties.items():
             if v is None:
                 continue
-            newMapping = SchemaMappingMatching(key=k)
-            if v.type.hasClass() and not self.type.isListRoot():
-                className = toClassStyle(v.type.name)
-                newMapping.type = v.type
-                newMapping.mapping.className = className
-                self.addImport(snakeCase(v.type.name), className)
-                self.mappings[k] = newMapping
-                v.scanForMappings()
-            elif self.type.isListRoot():
+            new_mapping = SchemaMappingMatching(key=k)
+            if v.type.has_class() and not self.type.is_list_root():
+                class_name = to_class_style(v.type.name)
+                new_mapping.type = v.type
+                new_mapping.mapping.className = class_name
+                self.add_import(snake_case(v.type.name), class_name)
+                self.mappings[k] = new_mapping
+                v.scan_for_mappings()
+            elif self.type.is_list_root():
                 self.type.child = v.child.type
-                newMapping.matching.rootListNotClass = not self.type.hasClass()
-                newMapping.type = self.type
-                self.mappings[k] = newMapping
-                if self.type.hasClass() and v.child.type.isClass():
-                    self.addImport(snakeCase(v.child.type.name),
-                                   toClassStyle(v.child.type.name))
-                    newMapping.mapping.className = toClassStyle(v.child.name)
-                    v.scanForMappings()
+                new_mapping.matching.root_list_not_class = not self.type.has_class()
+                new_mapping.type = self.type
+                self.mappings[k] = new_mapping
+                if self.type.has_class() and v.child.type.is_class():
+                    self.add_import(
+                        snake_case(v.child.type.name), to_class_style(v.child.type.name)
+                    )
+                    new_mapping.mapping.className = to_class_style(v.child.name)
+                    v.scan_for_mappings()
 
-    def dtcToString(self):
-        bluePrint = self.getBluePrint()
+    def dtc_to_string(self):
+        blue_print = self.get_blue_print()
         attributes = []
         for k, v in self.properties.items():
             if v is None:
-                attrType = "Any"
-                defaultValue = "None"
+                attr_type = "Any"
+                default_value = "None"
             else:
-                attrType = v.type.toString()
-                defaultValue = v.type.getDefaultWithField()
-            attribute = f"{' ' * 4}{k}: {attrType} = {defaultValue}"
-            if attrType is not None:
+                attr_type = v.type.to_string()
+                default_value = v.type.get_default_with_field()
+            attribute = f"{' ' * 4}{k}: {attr_type} = {default_value}"
+            if attr_type is not None:
                 attributes.append(attribute)
             else:
-                raise ('*** ATTRIBUTE ERROR', k, v)
-        bluePrint['attributes'] = "\n".join(attributes)
+                raise ("*** ATTRIBUTE ERROR", k, v)
+        blue_print["attributes"] = "\n".join(attributes)
         if len(self.imports) > 0:
-            bluePrint['imports'] = "\n".join([
-                f"from {self.root.dtc_path}.{snakeCase(self.root.name)}.{snakeCase(k)} import " + ", ".join(
-                    [str(v) for v in imports])
-                for k, imports in self.imports.items()
-            ]) + "\n"
+            blue_print["imports"] = (
+                    "\n".join(
+                        [
+                            f"from {self.root.dtc_path}.{snake_case(self.root.name)}.{snake_case(k)} import "
+                            + ", ".join([str(v) for v in imports])
+                            for k, imports in self.imports.items()
+                        ]
+                    )
+                    + "\n"
+            )
         if len(self.mappings) > 0:
-            fromMapping = [
-                value for value in [
-                    v.from_dict_str() for k,
-                    v in self.mappings.items()] if value != ""]
-            toMapping = [
-                value for value in [
-                    v.to_dict_str() for k,
-                    v in self.mappings.items()] if value != ""]
-            if len(fromMapping) > 0:
-                bluePrint["from_dict_mapping"] = "\n" + "\n".join(fromMapping)
-            # if len(toMapping) > 0:
-            #    bluePrint["to_dict_mapping"] = "\n" + "\n".join(toMapping)
-        return copy(self.root.template).format(**bluePrint)
+            from_mapping = [
+                value
+                for value in [v.from_dict_str() for k, v in self.mappings.items()]
+                if value != ""
+            ]
+            to_mapping = [
+                value
+                for value in [v.to_dict_str() for k, v in self.mappings.items()]
+                if value != ""
+            ]
+            if len(from_mapping) > 0:
+                blue_print["from_dict_mapping"] = "\n" + "\n".join(from_mapping)
+            # if len(to_mapping) > 0:
+            #    blue_print["to_dict_mapping"] = "\n" + "\n".join(to_mapping)
+        return copy(self.root.template).format(**blue_print)
 
-    def generateClass(self):
-        if self.type.hasClass():
-            dataclassStr = self.dtcToString()
-            with open(multiplePathJoins([self.root.dtc_path, snakeCase(self.root.name), f"{snakeCase(self.name)}.py"]),
-                      'w') as f:
-                f.write(dataclassStr)
+    def generate_class(self):
+        if self.type.has_class():
+            dataclass_str = self.dtc_to_string()
+            with open(
+                    multiple_path_joins(
+                        [
+                            self.root.dtc_path,
+                            snake_case(self.root.name),
+                            f"{snake_case(self.name)}.py",
+                        ]
+                    ),
+                    "w",
+            ) as f:
+                f.write(dataclass_str)
             for k, v in self.properties.items():
                 if v is None:
                     continue
-                if v.type.hasClass():
-                    v.generateClass()
+                if v.type.has_class():
+                    v.generate_class()
 
-    def getBluePrint(self) -> Dict[str, str]:
+    def get_blue_print(self) -> Dict[str, str]:
         return {
             "json_path": self.root.dtc_path,
             "imports": "",
-            "className": toClassStyle(self.name),
+            "className": to_class_style(self.name),
             "attributes": "",
             "to_dict_mapping": "",
             "from_dict_mapping": "",

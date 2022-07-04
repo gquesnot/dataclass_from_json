@@ -15,7 +15,7 @@ from src.controllers.schema_root import SchemaRoot
 #
 #     return MatchTimeline(**data)
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sb = SchemaRoot(json_path="test_jsons", dtc_path="test_dataclass")
     sb.generate("summonerSpells")
 

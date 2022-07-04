@@ -9,30 +9,30 @@ class SchemaDefault(SchemaBase):
     This class is used to be the base class for all simple type_
     """
 
-    def __init__(self,
-                 name: str,
-                 path,
-                 type_: "CustomType",
-                 root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict',
-                                        'SchemaList',
-                                        'SchemaClass']] = None):
+    def __init__(
+            self,
+            name: str,
+            path,
+            type_: "CustomType",
+            root: "SchemaRoot",
+            parent: Optional[Union["SchemaDict", "SchemaList", "SchemaClass"]] = None,
+    ):
         super().__init__(name, path, type_, root, parent)
 
-    def addData(self, data):
+    def add_data(self, data):
         """
         This method is used to add data to the class
         """
         if data is None:
-            self.type.setNullable()
+            self.type.set_nullable()
         else:
-            super().addData(data)
+            super().add_data(data)
 
-    def scanForMappings(self):
+    def scan_for_mappings(self):
         pass
 
-    def generateClass(self):
+    def generate_class(self):
         return
 
-    def scanRequired(self):
+    def scan_required(self):
         pass

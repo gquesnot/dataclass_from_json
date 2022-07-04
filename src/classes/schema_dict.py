@@ -1,49 +1,58 @@
 from typing import Optional, Union, Set
 
 from src.classes.schema_base import SchemaBase
-from src.utils.string_manipulation import getListDictSubKey
+from src.utils.string_manipulation import get_list_dict_sub_key
 
 
 class SchemaDict(SchemaBase):
-    child: Optional[Union['SchemaDefault', 'SchemaList', 'SchemaClass']] = None
+    child: Optional[Union["SchemaDefault", "SchemaList", "SchemaClass"]] = None
     keys: Set[str]
 
-    def __init__(self,
-                 name: str,
-                 path,
-                 type_: "MyType",
-                 root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict',
-                                        'SchemaList',
-                                        'SchemaClass']] = None):
+    def __init__(
+            self,
+            name: str,
+            path,
+            type_: "CustomType",
+            root: "SchemaRoot",
+            parent: Optional[Union["SchemaDict", "SchemaList", "SchemaClass"]] = None,
+    ):
         super().__init__(name, path, type_, root, parent)
         self.child = None
         self.keys = set()
 
-    def addData(self, data):
-        super().addData(data)
+    def add_data(self, data):
+        super().add_data(data)
         self.keys = self.keys | set(data.keys())
-        parentKey = self.name.replace('_dict', '')
-        subKey = getListDictSubKey(parentKey, self.parent.name)
-        if self.type.hasClass():
-            self.type.name = subKey
+        parent_key = self.name.replace("_dict", "")
+        sub_key = get_list_dict_sub_key(parent_key, self.parent.name)
+        if self.type.has_class():
+            self.type.name = sub_key
         for key, value in data.items():
-            childNullable = self.type.hasChild() and self.type.child.nullable
+            child_nullable = self.type.has_child() and self.type.child.nullable
 
-            if self.type.isDictClass() or self.type.isDictList() or self.type.isDictSimple():
-                self.child = self.root.addSchemaOrData(
-                    subKey, value, self, childNullable, forceChildClass=self.type.hasClass())
+            if (
+                    self.type.is_dict_class()
+                    or self.type.is_dict_list()
+                    or self.type.is_dict_simple()
+            ):
+                self.child = self.root.add_schema_or_data(
+                    sub_key,
+                    value,
+                    self,
+                    child_nullable,
+                    force_child_class=self.type.has_class(),
+                )
             else:
                 raise Exception("Not a dict type", self.type, self)
 
-    def scanRequired(self):
+    def scan_required(self):
         if self.child is not None:
-            self.child.scanRequired()
+            self.child.scan_required()
 
-    def scanForMappings(self):
+    def scan_for_mappings(self):
         if self.child is not None:
-            self.child.scanForMappings()
+            self.child.scan_for_mappings()
 
-    def generateClass(self):
+    def generate_class(self):
         if self.child is not None:
-            self.child.generateClass()
+            self.child.generate_class()

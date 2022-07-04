@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
 from dataclasses import field
-from typing import Optional, List, Any, Union
+from typing import Optional, List, Union, Any
+
+from src.dataclass.custom_type import CustomType
 
 
 class SchemaBase(ABC):
@@ -9,22 +11,23 @@ class SchemaBase(ABC):
     """
 
     root: "SchemaRoot"
-    parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']
-                     ] = field(default_factory=lambda: None)
+    parent: Optional[Union["SchemaDict", "SchemaList", "SchemaClass"]] = field(
+        default_factory=lambda: None
+    )
     name: str = ""
     path: str = ""
     nullable: bool = False
-    type: "MyType"
+    type: CustomType
     datas: List[Any] = field(default_factory=list)
 
-    def __init__(self,
-                 name: str,
-                 path: str,
-                 type_: "MyType",
-                 root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict',
-                                        'SchemaList',
-                                        'SchemaClass']] = None):
+    def __init__(
+            self,
+            name: str,
+            path: str,
+            type_: "CustomType",
+            root: "SchemaRoot",
+            parent: Optional[Union["SchemaDict", "SchemaList", "SchemaClass"]] = None,
+    ):
         """
         This method is used to initialize the class
         """
@@ -39,20 +42,20 @@ class SchemaBase(ABC):
     def __str__(self):
         return f"{self.path} :\n{' ' * 4 + 'type: ' + str(self.type)}"
 
-    def addData(self, data):
+    def add_data(self, data):
         self.datas.append(data)
 
     def __len__(self):
         return len(self.datas)
 
     @abstractmethod
-    def scanRequired(self):
+    def scan_required(self):
         pass
 
     @abstractmethod
-    def generateClass(self):
+    def generate_class(self):
         pass
 
     @abstractmethod
-    def scanForMappings(self):
+    def scan_for_mappings(self):
         pass
