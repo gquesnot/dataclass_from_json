@@ -67,7 +67,7 @@ class CustomType:
         elif self.is_list_root():
 
             if self.child.is_simple():
-                result = f"List[{self.child.simple.value}]"
+                result = f"List[{self.child.simple.value if not enum_name else enum_name}]"
             else:
                 result = f"List[{self.child.to_string()}]"
         elif self.is_complex() and not self.is_none():
@@ -84,7 +84,7 @@ class CustomType:
                 elif self.is_list_empty():
                     result = f"List[Any]"
                 else:
-                    result = f"List[{self.child.to_string()}]"
+                    result = f"List[{self.child.to_string() if not enum_name else enum_name}]"
             else:
                 raise Exception("Unknown complex type_: " + str(self.complex))
         else:

@@ -5,7 +5,7 @@ from pydantic import Field, BaseModel
 {enums}
 class {className}(BaseModel{variant}):
 {attributes}
-
+{functions}
     def to_dict(self) -> Dict[str, Any]:
         data = self.dict(){to_dict_mapping}
         return data

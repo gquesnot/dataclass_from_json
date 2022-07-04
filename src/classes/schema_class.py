@@ -1,5 +1,5 @@
 from copy import copy
-from typing import Dict, Set, List, Optional, Union
+from typing import Dict, Set, List, Optional, Union, Tuple
 
 from src.dataclass.schema_mapping_matching import SchemaMappingMatching, SchemaMatching
 from src.dataclass.custom_type import CustomType
@@ -130,37 +130,47 @@ class SchemaClass(SchemaBase):
 
         return copy(self.root.enum_template).format(**params)
 
-    def get_enum(self, enums, k, v):
+    def get_enum(self, enums, k, v) -> Tuple[Dict[str, Dict[str,str]], Optional[str], bool]:
         enum_name = None
+        is_new_attribute = False
         if not v or (v and not hasattr(v, 'child')):
-            return enums, enum_name
+            return enums, enum_name, is_new_attribute
         if not v.child:
-            return enums, enum_name
+            return enums, enum_name, is_new_attribute
         if isinstance(v, SchemaDict):
             enum_name = f"{to_class_style(v.child.name)}Enum"
             enums[enum_name] = keys_to_enums(v.keys)
         elif isinstance(v, SchemaList) and v.child and v.child.type.simple == SimpleType.STRING:
             name = v.name.replace('_list', '')
             if name[-1] != "s":
-                return enums, enum_name
+                return enums, enum_name, is_new_attribute
             name = name[:-1]
             datas = list(set(v.child.datas))
             min_len = len(min(datas, key=len))
-            if len(datas) > 0 and 15 > min_len > 2:
-                print("enum list str", v, v.child)
+            if 30 > len(datas) > 0 and 15 > min_len > 2:
                 enum_name = f"{to_class_style(name)}Enum"
+                is_new_attribute = True
+                print('INFO', f"{name} is a new enum in {self.path}")
                 enums[enum_name] = keys_to_enums(datas)
 
-        return enums, enum_name
+        return enums, enum_name, is_new_attribute
 
-    def get_attributes_and_enums(self):
+    def get_attributes_and_enums(self) -> Tuple[List, Dict[str, Dict[str,str]], List]:
         attributes = []
+        attributes_after = []
+        functions = []
         enums = dict()
         for k, v in self.properties.items():
-            # ENUMS
-            enums, enum_name = self.get_enum(enums, k, v)
-
-            # Attributes
+            enums, enum_name, is_new_attribute = self.get_enum(enums, k, v)
+            if is_new_attribute:
+                attributes_after.append(
+                    f"{' ' * 4}{enum_name}: {enum_name} = {enum_name}"
+                )
+                name = enum_name.replace('Enum', '').lower()
+                functions.append(
+                    f"{' ' * 4}def has_{name}(self, {name}:{enum_name}) -> bool:\n"
+                    f"{' ' * 8}return {name} in self.{k}"
+                )
             if v is None:
                 attr_type = "Any"
                 default_value = "None"
@@ -172,17 +182,20 @@ class SchemaClass(SchemaBase):
                 attributes.append(attribute)
             else:
                 raise ("*** ATTRIBUTE ERROR", k, v)
-        return attributes, enums
+        attributes += attributes_after
+        return attributes, enums, functions
 
     def dtc_to_string(self):
         blue_print = self.get_blue_print()
-        attributes, enums = self.get_attributes_and_enums()
+        attributes, enums, functions = self.get_attributes_and_enums()
 
         blue_print["attributes"] = "\n".join(attributes)
         if len(enums) > 0:
             blue_print["enums"] = "\n".join(
                 [self.get_enum_str(k, v) for k, v in enums.items()]
             )
+        if len(functions) > 0:
+            blue_print['functions'] = "\n" + "\n".join(functions) + "\n"
         if len(self.imports) > 0:
             blue_print["imports"] = (
                     "\n".join(
@@ -257,6 +270,7 @@ class SchemaClass(SchemaBase):
             "from_dict_mapping": "",
             "variant": "",
             "enums": "",
+            "functions": "",
         }
 
     def __str__(self):
