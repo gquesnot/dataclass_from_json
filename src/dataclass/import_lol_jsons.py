@@ -16,7 +16,7 @@ lol_api_europe = "https://europe.api.riotgames.com"
 @dataclass
 class ImportLolJsons:
     json_path: str
-    len_files:int= field(default=0)
+    len_files: int = field(default=0)
     session: Optional[requests.session] = field(default=None)
     RIOT_API_KEY: Optional[str] = field(default=None)
     datas: Dict[str, Any] = field(default_factory=dict)
@@ -51,7 +51,8 @@ class ImportLolJsons:
         self.session = requests.session()
 
     def check_jsons_ok(self):
-        if len(os.listdir("test_jsons")) != self.len_files:
+        len_jsons = len([file for file in os.listdir("test_jsons") if file != ".gitignore"])
+        if len_jsons != self.len_files:
             print("Jsons files not found, importing...")
             return self.import_jsons()
         return True
