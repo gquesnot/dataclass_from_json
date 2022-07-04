@@ -26,7 +26,11 @@ class SchemaRoot:
     json_path: str = "jsons"
     template_path: str = "src\\templates"
 
-    def __init__(self, json_path="jsons", dtc_path="dataclass", template_path="src/templates"):
+    def __init__(
+            self,
+            json_path="jsons",
+            dtc_path="dataclass",
+            template_path="src/templates"):
         self.template = ""
         self.json_path = json_path
         self.dtc_path = dtc_path
@@ -39,8 +43,10 @@ class SchemaRoot:
             self.template = f.read()
 
     def copyBaseDataClass(self):
-        templateBaseDataClassPath = multiplePathJoins([self.template_path, "base_dataclass.py"])
-        destBaseDataClassPath = multiplePathJoins([self.dtc_path, "base_dataclass.py"])
+        templateBaseDataClassPath = multiplePathJoins(
+            [self.template_path, "base_dataclass.py"])
+        destBaseDataClassPath = multiplePathJoins(
+            [self.dtc_path, "base_dataclass.py"])
         shutil.copyfile(templateBaseDataClassPath, destBaseDataClassPath)
 
     def reset(self):
@@ -54,9 +60,11 @@ class SchemaRoot:
         data = self.getData()
         self.clearDestDirectory()
         if isinstance(data, dict):
-            type_ = CustomType(simple=SimpleType.DICT, complex=ComplexType.CLASS)
+            type_ = CustomType(simple=SimpleType.DICT,
+                               complex=ComplexType.CLASS)
         else:
-            type_ = CustomType(simple=SimpleType.LIST, complex=ComplexType.LIST_ROOT)
+            type_ = CustomType(simple=SimpleType.LIST,
+                               complex=ComplexType.LIST_ROOT)
         self.root = SchemaClass(self.name, self.name, data, type_, self, None)
         self.root.scanRequired()
         self.root.scanForMappings()
@@ -80,7 +88,13 @@ class SchemaRoot:
     def getPath(self, parent, name):
         return parent.path + "." + name if parent is not None else name
 
-    def getChildOrNewChild(self, name: str, type_: CustomType, data: Any, parent, forceNullable=False):
+    def getChildOrNewChild(
+            self,
+            name: str,
+            type_: CustomType,
+            data: Any,
+            parent,
+            forceNullable=False):
         if type_.isComplex() and not type_.isClass():
             if type_.isList():
                 name = f"{name}_list"
@@ -113,14 +127,21 @@ class SchemaRoot:
         child.addData(data)
         return child
 
-    def addSchemaOrData(self, name, data, parent=None, forceNullable=False, forceChildClass=False):
+    def addSchemaOrData(
+            self,
+            name,
+            data,
+            parent=None,
+            forceNullable=False,
+            forceChildClass=False):
         if forceChildClass:
-            type_ = CustomType(simple=SimpleType.DICT, complex=ComplexType.CLASS, name=name)
+            type_ = CustomType(simple=SimpleType.DICT,
+                               complex=ComplexType.CLASS, name=name)
         else:
             type_ = CustomType.from_data(name, data)
 
-        return self.getChildOrNewChild(name, type_, data, parent, forceNullable)
-
+        return self.getChildOrNewChild(
+            name, type_, data, parent, forceNullable)
 
     # dynamic loading
     def loadFromJson(self, name):
@@ -135,10 +156,14 @@ class SchemaRoot:
             path = multiplePathJoins([self.dtc_path, snakeCase(name)])
             files = os.listdir(path)
 
-            classesName = [toClassStyle(removeExtension(file)) for file in files if not file.startswith("__")]
+            classesName = [toClassStyle(removeExtension(file))
+                           for file in files if not file.startswith("__")]
             if len(classesName) == 0:
-                raise Exception(f"Generate the Dataclass before , No One Found in {path}")
-            self.modules[name] = __import__(f"{self.dtc_path}.{snakeCase(name)}", fromlist=classesName)
+                raise Exception(
+                    f"Generate the Dataclass before , No One Found in {path}")
+            self.modules[name] = __import__(
+                f"{self.dtc_path}.{snakeCase(name)}",
+                fromlist=classesName)
 
     def get(self, name, datas):
         if name not in self.modules:

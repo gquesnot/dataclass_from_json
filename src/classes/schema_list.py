@@ -11,8 +11,14 @@ class SchemaList(SchemaBase):
 
     child: Optional[Union['SchemaDefault', 'SchemaList', 'SchemaClass']] = None
 
-    def __init__(self, name: str, path: str, type_: "MyType", root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = None):
+    def __init__(self,
+                 name: str,
+                 path: str,
+                 type_: "MyType",
+                 root: "SchemaRoot",
+                 parent: Optional[Union['SchemaDict',
+                                        'SchemaList',
+                                        'SchemaClass']] = None):
         super().__init__(name, path, type_, root, parent)
         self.child = None
 
@@ -29,8 +35,8 @@ class SchemaList(SchemaBase):
             if self.type.hasClass():
                 self.type.name = subKey
             for el in data:
-                self.child = self.root.addSchemaOrData(subKey, el, self, childNullable,
-                                                       forceChildClass=self.type.hasClass())
+                self.child = self.root.addSchemaOrData(
+                    subKey, el, self, childNullable, forceChildClass=self.type.hasClass())
 
     def scanRequired(self):
         if self.child is not None:

@@ -8,8 +8,14 @@ class SchemaDict(SchemaBase):
     child: Optional[Union['SchemaDefault', 'SchemaList', 'SchemaClass']] = None
     keys: Set[str]
 
-    def __init__(self, name: str, path, type_: "MyType", root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = None):
+    def __init__(self,
+                 name: str,
+                 path,
+                 type_: "MyType",
+                 root: "SchemaRoot",
+                 parent: Optional[Union['SchemaDict',
+                                        'SchemaList',
+                                        'SchemaClass']] = None):
         super().__init__(name, path, type_, root, parent)
         self.child = None
         self.keys = set()
@@ -25,8 +31,8 @@ class SchemaDict(SchemaBase):
             childNullable = self.type.hasChild() and self.type.child.nullable
 
             if self.type.isDictClass() or self.type.isDictList() or self.type.isDictSimple():
-                self.child = self.root.addSchemaOrData(subKey, value, self, childNullable,
-                                                       forceChildClass=self.type.hasClass())
+                self.child = self.root.addSchemaOrData(
+                    subKey, value, self, childNullable, forceChildClass=self.type.hasClass())
             else:
                 raise Exception("Not a dict type", self.type, self)
 

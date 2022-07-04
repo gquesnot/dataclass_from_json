@@ -16,19 +16,6 @@ class SchemaClass(SchemaBase):
     This class is used to be a class that represent a dict
     """
 
-    def getRealType(self):
-        pass
-        # signature = None
-        # if not self.type_.isListRoot() and not self.type_.isClass():
-        #     for k, v in self.properties.items():
-        #         if signature is None:
-        #             signature = v.getSignature()
-        #         else:
-        #             newSignature = v.getSignature()
-        #             if newSignature != signature:
-        #                 return ComplexType.CLASS
-        # return self.type_.types
-
     def getSignature(self):
         return set(self.properties.keys())
 
@@ -37,8 +24,15 @@ class SchemaClass(SchemaBase):
     mappings: Dict[str, SchemaMappingMatching]
     properties: Dict[str, Union["SchemaClass", "SchemaList", "SchemaDefault"]]
 
-    def __init__(self, name: str, path: str, data, type_: "CustomType", root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = None):
+    def __init__(self,
+                 name: str,
+                 path: str,
+                 data,
+                 type_: "CustomType",
+                 root: "SchemaRoot",
+                 parent: Optional[Union['SchemaDict',
+                                        'SchemaList',
+                                        'SchemaClass']] = None):
 
         self.mappings = dict()
         self.properties = dict()
@@ -69,10 +63,12 @@ class SchemaClass(SchemaBase):
                 newSchema = self.root.addSchemaOrData(newKey, v, self)
                 self.properties[newKey] = newSchema
 
-    def addMatching(self, key, newKey, rootListNotClass=False, nullable= False):
+    def addMatching(self, key, newKey, rootListNotClass=False, nullable=False):
         if key not in self.mappings:
-            self.mappings[newKey] = SchemaMappingMatching(key=newKey, type=CustomType(nullable=True), matching=SchemaMatching(from_=key,
-                                                                                                                              rootListNotClass=rootListNotClass))
+            self.mappings[newKey] = SchemaMappingMatching(
+                key=newKey, type=CustomType(
+                    nullable=True), matching=SchemaMatching(
+                    from_=key, rootListNotClass=rootListNotClass))
         else:
             self.mappings[newKey].matching.from_ = key
             self.mappings[newKey].matching.rootListNotClass = rootListNotClass
@@ -109,7 +105,8 @@ class SchemaClass(SchemaBase):
                 newMapping.type = self.type
                 self.mappings[k] = newMapping
                 if self.type.hasClass() and v.child.type.isClass():
-                    self.addImport(snakeCase(v.child.type.name), toClassStyle(v.child.type.name))
+                    self.addImport(snakeCase(v.child.type.name),
+                                   toClassStyle(v.child.type.name))
                     newMapping.mapping.className = toClassStyle(v.child.name)
                     v.scanForMappings()
 
@@ -136,8 +133,14 @@ class SchemaClass(SchemaBase):
                 for k, imports in self.imports.items()
             ]) + "\n"
         if len(self.mappings) > 0:
-            fromMapping = [value for value in [v.from_dict_str() for k, v in self.mappings.items()] if value != ""]
-            toMapping = [value for value in [v.to_dict_str() for k, v in self.mappings.items()] if value != ""]
+            fromMapping = [
+                value for value in [
+                    v.from_dict_str() for k,
+                    v in self.mappings.items()] if value != ""]
+            toMapping = [
+                value for value in [
+                    v.to_dict_str() for k,
+                    v in self.mappings.items()] if value != ""]
             if len(fromMapping) > 0:
                 bluePrint["from_dict_mapping"] = "\n" + "\n".join(fromMapping)
             # if len(toMapping) > 0:
@@ -155,23 +158,6 @@ class SchemaClass(SchemaBase):
                     continue
                 if v.type.hasClass():
                     v.generateClass()
-
-    def getSecondaryAttributes(self):
-        pass
-        # for k, v in self.properties.items():
-        #     if v is None:
-        #         print("*** getSecondary", k, v)
-        #     else:
-        #         v.getSecondaryAttributes()
-        #
-        # if self.type_.isClass():
-        #     self.type_.name = toClassStyle(self.name)
-        # elif self.type_.primary == ComplexType.DICT:
-        #     for k, v in self.properties.items():
-        #         if isinstance(v.type_, SchemaSimpleType):
-        #             self.type_.addSecondary(v.type_)
-        #         else:
-        #             self.type_.name = v.type_.name
 
     def getBluePrint(self) -> Dict[str, str]:
         return {

@@ -36,9 +36,8 @@ class SchemaMappingMatching:
         if self.type and self.type.isListRoot():
 
             if self.type.child.isClass():
-                return ' ' * 8 + "data = {" \
-                                 f"'{self.key}': [{self.getFromDictToDict('v')} for v in data]" \
-                                 "}"
+                return ' ' * 8 + \
+                    "data = {" f"'{self.key}': [{self.getFromDictToDict('v')} for v in data]" "}"
             else:
                 return ' ' * 8 + "data = {" + f"'{self.key}': data" + "}"
         if self.type and self.type.nullable:

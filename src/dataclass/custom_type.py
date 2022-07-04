@@ -21,14 +21,14 @@ class CustomType:
             return other
         return self
 
-
     @classmethod
     def from_data(cls, name, data, hasNullable=False):
         newType = cls(name=name, nullable=data is None or hasNullable)
 
         newType.simple = newType.getSimple(data)
         if newType.isComplex() and newType.simple != SimpleType.NONE:
-            newType.complex, hasChild, childData, nullable = newType.getComplex(data)
+            newType.complex, hasChild, childData, nullable = newType.getComplex(
+                data)
             if hasChild:
                 newType.child = cls.from_data("", childData, nullable)
         return newType
@@ -54,7 +54,8 @@ class CustomType:
 
     def getDefaultWithField(self):
         default = self.getDefault()
-        if (self.isList() or self.isDict() or self.hasClass()) and not self.nullable:
+        if (self.isList() or self.isDict()
+                or self.hasClass()) and not self.nullable:
             return f"Field(default_factory={default})"
         else:
             return f"Field(default={default})"
@@ -124,33 +125,40 @@ class CustomType:
                     return ComplexType.LIST_SIMPLE, True, childValue, nullable
                 else:
                     if type_ == SimpleType.LIST:
-                        return ComplexType.LIST_LIST, True, self.getBestList(value), nullable
+                        return ComplexType.LIST_LIST, True, self.getBestList(
+                            value), nullable
                     elif type_ == SimpleType.DICT:
                         return ComplexType.LIST_CLASS, False, None, nullable
                     else:
-                        raise Exception("Unknown list child type_: " + str(type_))
+                        raise Exception(
+                            "Unknown list child type_: " + str(type_))
             else:
                 raise Exception("Invalid list: " + str(types))
         elif isinstance(value, dict):
-            types, nullable, hasOneValue = self.getAllTypesAndWithoutNone(value.values())
-            allKeysAreValid = all([keyIsAValidDictAttribute(k) for k in value.keys()])
+            types, nullable, hasOneValue = self.getAllTypesAndWithoutNone(
+                value.values())
+            allKeysAreValid = all([keyIsAValidDictAttribute(k)
+                                  for k in value.keys()])
             keyAreAllNum = all([k.isnumeric() for k in value.keys()])
             nameEndByS = self.name[-1] == "s"
             if hasOneValue:
                 type_ = types.pop()
                 if self.isSimple(type_):
                     if not allKeysAreValid or keyAreAllNum or nameEndByS:
-                        childValue = list(value.values())[0] if len(value.values()) else None
+                        childValue = list(value.values())[0] if len(
+                            value.values()) else None
                         return ComplexType.DICT_SIMPLE, True, childValue, nullable
                     else:
                         return ComplexType.CLASS, False, None, nullable
                 else:
                     if type_ == SimpleType.LIST:
-                        return ComplexType.DICT_LIST, True, self.getBestList(value.values()), nullable
+                        return ComplexType.DICT_LIST, True, self.getBestList(
+                            value.values()), nullable
                     elif type_ == SimpleType.DICT:
                         return ComplexType.DICT_CLASS, False, None, nullable
                     else:
-                        raise Exception("Unknown dict child type_: " + str(type_))
+                        raise Exception(
+                            "Unknown dict child type_: " + str(type_))
             else:
                 if allKeysAreValid and not keyAreAllNum:
                     return ComplexType.CLASS, False, None, nullable
@@ -203,13 +211,15 @@ class CustomType:
         return self.complex == ComplexType.CLASS
 
     def hasClass(self):
-        return self.isDictClass() or self.isListClass() or self.isClass() or self.isListRoot()
+        return self.isDictClass() or self.isListClass(
+        ) or self.isClass() or self.isListRoot()
 
     def isDict(self):
         return self.isDictSimple() or self.isDictClass() or self.isDictList()
 
     def isList(self):
-        return self.isListSimple() or self.isListClass() or self.isListList() or self.isListEmpty()
+        return self.isListSimple() or self.isListClass(
+        ) or self.isListList() or self.isListEmpty()
 
     def isListClass(self):
         return self.complex == ComplexType.LIST_CLASS
@@ -233,7 +243,7 @@ class CustomType:
         return self.complex == ComplexType.DICT_LIST
 
     def isNone(self):
-        return self.simple == SimpleType.NONE or self.simple == None
+        return self.simple == SimpleType.NONE or self.simple is None
 
     def hasChild(self):
         return self.child is not None

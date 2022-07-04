@@ -9,8 +9,14 @@ class SchemaDefault(SchemaBase):
     This class is used to be the base class for all simple type_
     """
 
-    def __init__(self, name: str, path, type_: "CustomType", root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = None):
+    def __init__(self,
+                 name: str,
+                 path,
+                 type_: "CustomType",
+                 root: "SchemaRoot",
+                 parent: Optional[Union['SchemaDict',
+                                        'SchemaList',
+                                        'SchemaClass']] = None):
         super().__init__(name, path, type_, root, parent)
 
     def addData(self, data):

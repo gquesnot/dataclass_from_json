@@ -9,15 +9,22 @@ class SchemaBase(ABC):
     """
 
     root: "SchemaRoot"
-    parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = field(default_factory=lambda: None)
+    parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']
+                     ] = field(default_factory=lambda: None)
     name: str = ""
     path: str = ""
     nullable: bool = False
     type: "MyType"
     datas: List[Any] = field(default_factory=list)
 
-    def __init__(self, name: str, path: str, type_: "MyType", root: "SchemaRoot",
-                 parent: Optional[Union['SchemaDict', 'SchemaList', 'SchemaClass']] = None):
+    def __init__(self,
+                 name: str,
+                 path: str,
+                 type_: "MyType",
+                 root: "SchemaRoot",
+                 parent: Optional[Union['SchemaDict',
+                                        'SchemaList',
+                                        'SchemaClass']] = None):
         """
         This method is used to initialize the class
         """

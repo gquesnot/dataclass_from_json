@@ -1,7 +1,6 @@
 import os
 
 
-
 def multiplePathJoins(paths):
     """
     Joins multiple paths together.

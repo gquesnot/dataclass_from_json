@@ -83,7 +83,20 @@ def keyIsAValidAttribute(key: str):
         return False
     if not key.isidentifier():
         return False
-    if key in ('float', 'int', 'str', 'bool', 'None', 'list', 'dict', 'set', 'tuple', 'range', 'tuple', 'frozenset', 'type'):
+    if key in (
+        'float',
+        'int',
+        'str',
+        'bool',
+        'None',
+        'list',
+        'dict',
+        'set',
+        'tuple',
+        'range',
+        'tuple',
+        'frozenset',
+            'type'):
         return False
 
     return True
@@ -97,8 +110,15 @@ def getBaseTypeStr(value) -> str:
 
 
 def isBaseType(value):
-    return isinstance(value, str) or isinstance(value, int) or isinstance(value, float) or isinstance(value,
-                                                                                                      bool) or value is None
+    return isinstance(
+        value,
+        str) or isinstance(
+        value,
+        int) or isinstance(
+            value,
+            float) or isinstance(
+                value,
+        bool) or value is None
 
 
 def getSubKey(key):
